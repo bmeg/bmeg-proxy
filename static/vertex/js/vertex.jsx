@@ -53,7 +53,7 @@ var VertexView = React.createClass({
 
     var properties = Object.keys(props.vertex.properties).map(function(key) {
       var v = props.vertex.properties[key];
-      return <PropertyRow name={key} value={v} />
+      return <PropertyRow key={key} name={key} value={v} />
     });
 
     var inEdges = Object.keys(props.vertex['in']).map(function(key) {
@@ -82,8 +82,6 @@ var VertexView = React.createClass({
           <table
             className="prop-table mdl-data-table mdl-js-data-table mdl-data-table--selectable mdl-shadow--2dp"
           ><tbody>
-            <PropertyRow name="type" value={props.vertex.type} />
-            <PropertyRow name="vertex" value={snipPrefix(props.vertex.properties.gid)} />
             {properties}
           </tbody></table>
         </div>
@@ -100,7 +98,33 @@ var VertexView = React.createClass({
   }
 });
 
+
 var VertexInput = React.createClass({
+  componentDidMount() {
+    componentHandler.upgradeElement(this.refs.mdlWrapper)
+  },
+  render() {
+    return <div
+      className="mdl-textfield mdl-js-textfield mdl-textfield--floating-label"
+      ref="mdlWrapper"
+    >
+      <label
+        className="mdl-textfield__label"
+        htmlFor="vertex-gid-input"
+      >Enter a vertex GID</label>
+      <input
+        id="vertex-gid-input"
+        type="text"
+        name="gid"
+        className="mdl-textfield__input"
+        onChange={e => this.props.onChange(e.target.value)}
+        value={this.props.value}
+      />
+    </div>
+  },
+})
+
+var VertexViewer = React.createClass({
   getInitialState: function() {
     return {
       input: this.getVertexFromHash(),
@@ -190,20 +214,7 @@ var VertexInput = React.createClass({
 
     return (
       <div>
-        <div className="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-          <label
-            className="mdl-textfield__label"
-            htmlFor="vertex-gid-input"
-          >Enter a vertex GID</label>
-          <input
-            id="vertex-gid-input"
-            type="text"
-            name="gid"
-            className="mdl-textfield__input"
-            onChange={e => this.setVertex(e.target.value)}
-            value={this.state.input}
-          />
-        </div>
+        <VertexInput onChange={this.setVertex} value={this.state.input} />
         {loading}
         {error}
         {vertex}
@@ -212,4 +223,6 @@ var VertexInput = React.createClass({
   }
 });
 
-ReactDOM.render(<VertexInput />, document.getElementById('vertex-explore'));
+window.addEventListener('load', function() {
+  ReactDOM.render(<VertexViewer />, document.getElementById('vertex-explore'));
+})
