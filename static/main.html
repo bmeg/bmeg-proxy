@@ -33,7 +33,6 @@
     <script src="https://fb.me/react-dom-0.14.2.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
-    <script type="text/babel" src="/static/cohort/js/input.jsx"></script>
     <style>
     #view-source {
       position: fixed;
@@ -55,49 +54,24 @@
           <a href="#overview" class="mdl-layout__tab">Overview</a>
           <a href="#data" class="mdl-layout__tab">Data Sources</a>
           <a href="#server" class="mdl-layout__tab">Software</a>
+          <a href="/observation-deck/" class="mdl-layout__tab">Observation Deck</a>
         </div>
       </header>
       <main class="mdl-layout__content">
         <div class="mdl-layout__tab-panel is-active" id="graph">
           <section class="section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp">
-            <div class="mdl-card mdl-cell--12-col">
-              <div class="mdl-card__supporting-text">
-                <p>BMEG is an information integration engine for cancer biology.</p>
-                <p>BMEG is still under development and most of the feature aren't yet publically visable. Coming soon!</p>
-              </div>
-            </div>
-          </section>
-          <section class="section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp">
             <div class="mdl-card mdl-cell mdl-cell--12-col">
               <div class="mdl-card__supporting-text mdl-grid mdl-grid--no-spacing">                
-                <div id="gene-input">
-                </div>
-                <svg class="cohort" width="800" height="500">
-                </svg>
-                <!-- <form action="#"> -->
-                <!--   <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" style="width: 500px"> -->
-                <!--     <input class="mdl-textfield__input" type="text" id="search_field"> -->
-                <!--     <label class="mdl-textfield__label" for="search_field">Gene...</label> -->
-                <!--   </div> -->
-                <!--   <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent"> -->
-                <!--     Search -->
-                <!--   </button> -->
-                <!-- </form> -->
+                <form action="/static/viewer.html">
+                  <div className="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                    <label className="mdl-textfield__label" htmlFor="gene-text-input">Gene...</label>
+                    <input id="gene-text-input" type="text" name="gene" className="mdl-textfield__input" />
+                  </div>
+                </form>
               </div>
             </div>
           </section>
         </div>
-        <!-- div class="mdl-layout__tab-panel is-active" id="graph">
-          <form action="#">
-            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" style="width: 700px">
-              <input class="mdl-textfield__input" type="text" id="search_field">
-              <label class="mdl-textfield__label" for="search_field">Gene...</label>
-            </div>
-            <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">
-              Search
-            </button>
-          </form>
-        </div -->
         <div class="mdl-layout__tab-panel" id="overview">
           <section class="section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp">
             <div class="mdl-card mdl-cell--12-col">
@@ -106,6 +80,7 @@
                 <div>
                 The BioMedical Evidence Graph is a information integration system.
                 </div>
+                <img src="/static/schema.svg" style="width:600px;"/>
                 <p>The BMEG currently holds:</p>
                 <ul>
                   <li>11009 Patients</li>
