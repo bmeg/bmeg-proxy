@@ -2,39 +2,25 @@ var snipPrefix = function(s) {
   return s.substring(s.indexOf(':') + 1);
 }
 
-function VertexEdge(props) {
-  return <li><a onClick={props.onClick}>{snipPrefix(props.gid)}</a></li>
-}
-
-
 var VertexEdges = React.createClass({
   getInitialState: function() {
     return {};
   },
 
   render: function() {
-    var edges = this;
-    var edgeList = this.props.edges.map(function(edge) {
-      return <VertexEdge
-        key={edge}
-        gid={edge}
-        onClick={() => edges.props.navigate(edge)}
-      />
-    })
+    var props = this.props;
+    var prefix = props.edges[0].split(':')[0]
+    var header = props.label + " (" + props.direction + " " + prefix + ")";
 
-    var prefix = this.props.edges[0].split(':')[0]
+    var items = props.edges.map(gid => (
+      <ExpandoItem key={gid}>
+        <a onClick={() => props.navigate(gid)}>{snipPrefix(gid)}</a>
+      </ExpandoItem>
+    ));
 
-    return (
-      <div>
-        <h4>{this.props.label} ({this.props.direction} {prefix})</h4>
-        <ul>
-          {edgeList}
-        </ul>
-      </div>
-    );
+    return <Expando header={header}>{items}</Expando>;
   }
 });
-
 
 function PropertyRow(props) {
   return (<tr>
@@ -56,7 +42,10 @@ var VertexView = React.createClass({
       return <PropertyRow key={key} name={key} value={v} />
     });
 
-    var inEdges = Object.keys(props.vertex['in']).map(function(key) {
+    var inEdges = Object.keys(props.vertex['in'])
+    // Filter out edges with "hasInstance" in label
+    .filter(key => key != 'hasInstance')
+    .map(function(key) {
       return <VertexEdges
         key={key}
         label={key}
@@ -66,7 +55,10 @@ var VertexView = React.createClass({
       />
     });
 
-    var outEdges = Object.keys(props.vertex['out']).map(function(key) {
+    var outEdges = Object.keys(props.vertex['out'])
+    // Filter out edges with "hasInstance" in label
+    .filter(key => key != 'hasInstance')
+    .map(function(key) {
       return <VertexEdges
         key={key}
         label={key}
@@ -85,13 +77,15 @@ var VertexView = React.createClass({
             {properties}
           </tbody></table>
         </div>
-        <div className="vertex-in-edges">
-          <h3>In Edges</h3>
-          {inEdges}
-        </div>
-        <div className="vertex-out-edges">
-          <h3>Out Edges</h3>
-          {outEdges}
+        <div className="vertex-edges-wrapper">
+          <div className="vertex-in-edges vertex-edges">
+            <h4>In Edges</h4>
+            {inEdges}
+          </div>
+          <div className="vertex-out-edges vertex-edges">
+            <h4>Out Edges</h4>
+            {outEdges}
+          </div>
         </div>
       </div>
     )
@@ -124,8 +118,47 @@ var VertexInput = React.createClass({
   },
 })
 
+
+var Expando = React.createClass({
+  getInitialState() {
+    return {
+      collapsed: true,
+    }
+  },
+  componentDidMount() {
+    var content = $(this.refs.content)
+    content.css('margin-top', -content.height());
+  },
+  onClick() {
+    this.setState({collapsed: !this.state.collapsed})
+  },
+  render() {
+    var props = this.props;
+    var rootClassName = classNames("expando", "mdl-collapse", "mdl-navigation", {
+      "mdl-collapse--opened": !this.state.collapsed,
+    })
+    
+    return (<div className={rootClassName}>
+      <a className="mdl-navigation__link mdl-collapse__button expando-header" onClick={this.onClick}>
+        <i className="material-icons mdl-collapse__icon mdl-animation--default">expand_more</i>
+        {props.header}
+      </a>
+      <div className="mdl-collapse__content-wrapper expando-content">
+        <div className="mdl-collapse__content mdl-animation--default" ref="content">
+          {props.children}
+        </div>
+      </div>
+    </div>)
+  }
+})
+
+function ExpandoItem(props) {
+  return <span className="mdl-navigation__link">{props.children}</span>
+}
+
+
 var VertexViewer = React.createClass({
-  getInitialState: function() {
+  getInitialState() {
     return {
       input: this.getVertexFromHash(),
       loading: false,
