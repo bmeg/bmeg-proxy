@@ -243,3 +243,9 @@ a {
 .console-query-line {
   
 }
+.prop-table {
+  width: 100%;
+}
+.prop-key {
+  font-weight: bold;
+}

@@ -2,10 +2,6 @@ var snipPrefix = function(s) {
   return s.substring(s.indexOf(':') + 1);
 }
 
-function VertexProperty(props) {
-  return <div>{props.name} : {props.property}</div>
-}
-
 function VertexEdge(props) {
   return <li><a onClick={props.onClick}>{snipPrefix(props.gid)}</a></li>
 }
@@ -40,6 +36,13 @@ var VertexEdges = React.createClass({
 });
 
 
+function PropertyRow(props) {
+  return (<tr>
+    <td className="prop-key mdl-data-table__cell--non-numeric">{props.name}</td>
+    <td className="mdl-data-table__cell--non-numeric">{props.value}</td>
+  </tr>)
+}
+
 var VertexView = React.createClass({
   getInitialState: function() {
     return {}
@@ -49,12 +52,8 @@ var VertexView = React.createClass({
     var props = this.props;
 
     var properties = Object.keys(props.vertex.properties).map(function(key) {
-      var property = props.vertex.properties[key];
-      return <VertexProperty
-        key={key}
-        name={key}
-        property={property}
-      />
+      var v = props.vertex.properties[key];
+      return <PropertyRow name={key} value={v} />
     });
 
     var inEdges = Object.keys(props.vertex['in']).map(function(key) {
@@ -79,9 +78,14 @@ var VertexView = React.createClass({
 
     return (
       <div>
-        <h2>Showing {props.vertex.type} vertex {snipPrefix(props.vertex.properties.gid)}</h2>
         <div className="vertex-properties">
-          {properties}
+          <table
+            className="prop-table mdl-data-table mdl-js-data-table mdl-data-table--selectable mdl-shadow--2dp"
+          ><tbody>
+            <PropertyRow name="type" value={props.vertex.type} />
+            <PropertyRow name="vertex" value={snipPrefix(props.vertex.properties.gid)} />
+            {properties}
+          </tbody></table>
         </div>
         <div className="vertex-in-edges">
           <h3>In Edges</h3>
@@ -162,7 +166,7 @@ var VertexInput = React.createClass({
   render: function() {
     var loading = "";
     if (this.state.loading) {
-      loading = <div>"Loading..."</div>
+      loading = <div className="mdl-spinner mdl-js-spinner is-active"></div>
     }
 
     var error;
