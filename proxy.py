@@ -54,10 +54,11 @@ if __name__ == "__main__":
 
     application = tornado.web.Application([
         (r"^/()$", NoCacheStaticFileHandler, dict(path=os.path.join(STATIC_DIR, "main.html"))),
-        (r"^/gaia/vertex/query", ProxyHandler, dict(url="%s/gaia/vertex/query" % args.main)),
-        (r"^/gaia/vertex/find/(.*)", ProxyHandler, dict(url="%s/gaia/vertex/find/" % args.main) ),
-        (r"^/observation-deck/(.*)", ProxyHandler, dict(url="%s/observation-deck/" % args.main) ),
-        (r"^/static/(.*)", NoCacheStaticFileHandler, dict(path=STATIC_DIR) )
+        (r"^/static/(.*)", NoCacheStaticFileHandler, dict(path=STATIC_DIR) ),
+        #(r"^/gaia/vertex/query", ProxyHandler, dict(url="%s/gaia/vertex/query" % args.main)),
+        #(r"^/gaia/vertex/find/(.*)", ProxyHandler, dict(url="%s/gaia/vertex/find/" % args.main) ),
+        #(r"^/gaia/gene/(.*)/find/(.*)", ProxyHandler, dict(url="%s/gaia/vertex/find/" % args.main) ),
+        (r"^(.*)", ProxyHandler, dict(url=args.main)),
     ])
 
     application.listen(args.port)
