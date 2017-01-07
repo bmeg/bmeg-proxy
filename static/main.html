@@ -61,12 +61,22 @@
           <section class="section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp">
             <div class="mdl-card mdl-cell mdl-cell--12-col">
               <div class="mdl-card__supporting-text mdl-grid mdl-grid--no-spacing">                
-                <form action="/static/viewer.html">
-                  <div className="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                    <label className="mdl-textfield__label" htmlFor="gene-text-input">Gene...</label>
-                    <input id="gene-text-input" type="text" name="gene" className="mdl-textfield__input" />
+                <form class="gene-search-form" action="/static/viewer.html">
+                  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                      <label class="mdl-textfield__label" htmlFor="gene-text-input">Search for a gene...</label>
+                      <input id="gene-text-input" type="text" class="mdl-textfield__input"  autocomplete="off" />
+                      <input id="gene-text-hidden" type="hidden" name="gid" value=""/>
                   </div>
                 </form>
+                <script>
+                  $(".gene-search-form").submit(e => {
+                    var el = $("#gene-text-input")
+                    var hidden = $("#gene-text-hidden")
+                    hidden.val("gene:" + el.val());
+                    //e.preventDefault()
+                    //e.stopPropagation()
+                  })
+                </script>
               </div>
             </div>
           </section>

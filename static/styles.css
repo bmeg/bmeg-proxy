@@ -320,3 +320,11 @@ a {
 .mdl-collapse.mdl-collapse--opened .mdl-collapse__content {
   margin-top: 0 !important;
 }
+
+.gene-search-form {
+  width: 90%;
+  margin: 0 auto;
+}
+.gene-search-form > div {
+  width: 100%;
+}
