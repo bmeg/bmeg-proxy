@@ -29,69 +29,66 @@ function PropertyRow(props) {
   </tr>)
 }
 
-var VertexView = React.createClass({
-  getInitialState: function() {
-    return {}
-  },
+var VertexProperties = function(props) {
+  var properties = Object.keys(props.vertex.properties).map(function(key) {
+    var v = props.vertex.properties[key];
+    return <PropertyRow key={key} name={key} value={v} />
+  });
 
-  render: function() {
-    var props = this.props;
+  return (
+    <div>
+      <div className="vertex-properties">
+        <table
+          className="prop-table mdl-data-table mdl-js-data-table mdl-data-table--selectable mdl-shad--2dp"
+        ><tbody>
+          {properties}
+        </tbody></table>
+      </div>
+    </div>
+  )
+}
 
-    var properties = Object.keys(props.vertex.properties).map(function(key) {
-      var v = props.vertex.properties[key];
-      return <PropertyRow key={key} name={key} value={v} />
-    });
+var VertexEdges = function(props) {
+  var inEdges = Object.keys(props.vertex['in'])
+  // Filter out edges with "hasInstance" in label
+  .filter(key => key != 'hasInstance')
+  .map(function(key) {
+    return <VertexEdges
+      key={key}
+      label={key}
+      navigate={props.navigate}
+      edges={props.vertex['in'][key]}
+      direction="from"
+    />
+  });
+   var outEdges = Object.keys(props.vertex['out'])
+  // Filter out edges with "hasInstance" in label
+  .filter(key => key != 'hasInstance')
+  .map(function(key) {
+    return <VertexEdges
+      key={key}
+      label={key}
+      navigate={props.navigate}
+      edges={props.vertex['out'][key]}
+      direction="to"
+    />
+  });
 
-    var inEdges = Object.keys(props.vertex['in'])
-    // Filter out edges with "hasInstance" in label
-    .filter(key => key != 'hasInstance')
-    .map(function(key) {
-      return <VertexEdges
-        key={key}
-        label={key}
-        navigate={props.navigate}
-        edges={props.vertex['in'][key]}
-        direction="from"
-      />
-    });
-
-    var outEdges = Object.keys(props.vertex['out'])
-    // Filter out edges with "hasInstance" in label
-    .filter(key => key != 'hasInstance')
-    .map(function(key) {
-      return <VertexEdges
-        key={key}
-        label={key}
-        navigate={props.navigate}
-        edges={props.vertex['out'][key]}
-        direction="to"
-      />
-    });
-
-    return (
-      <div>
-        <div className="vertex-properties">
-          <table
-            className="prop-table mdl-data-table mdl-js-data-table mdl-data-table--selectable mdl-shadow--2dp"
-          ><tbody>
-            {properties}
-          </tbody></table>
+  return (
+    <div>
+      <div className="vertex-edges-wrapper">
+        <div className="vertex-in-edges vertex-edges">
+          <h4>In Edges</h4>
+          {inEdges}
         </div>
-        <div className="vertex-edges-wrapper">
-          <div className="vertex-in-edges vertex-edges">
-            <h4>In Edges</h4>
-            {inEdges}
-          </div>
-          <div className="vertex-out-edges vertex-edges">
-            <h4>Out Edges</h4>
-            {outEdges}
-          </div>
+        <div className="vertex-out-edges vertex-edges">
+          <h4>Out Edges</h4>
+          {outEdges}
         </div>
       </div>
-    )
-  }
-});
-
+    </div>
+  )
+}
 
 var VertexInput = React.createClass({
   componentDidMount() {
@@ -156,6 +153,10 @@ function ExpandoItem(props) {
   return <span className="mdl-navigation__link">{props.children}</span>
 }
 
+var PubmedLink = function(props) {
+  var url = "https://www.ncbi.nlm.nih.gov/pubmed/" + props.id;
+  return <a href={url}>;
+}
 
 var VertexViewer = React.createClass({
   getInitialState() {
@@ -235,14 +236,18 @@ var VertexViewer = React.createClass({
     if (this.state.input) {
       emptyMessage = "No vertex found";
     }
+
     var vertex = <div className="empty-vertex">{emptyMessage}</div>;
+    var visualizations = [];
 
     // The vertex isn't empty, so create a VertexView
     if (this.state.vertex.properties) {
-      vertex = <VertexView
-        navigate={this.setVertex}
-        vertex={this.state.vertex}
-      />
+      vertex = <div><VertexProperties vertex={this.state.vertex} /><VertexEdges vertex={this.state.vertex} navigate={this.setVertex} /></div>
+    }
+
+    if (this.state.vertex.properties.type === 'Pubmed') {
+      var link = <PubmedLink id={this.state.vertex.properties.pmid}>
+      visualizations.push(link)
     }
 
     return (
@@ -250,6 +255,7 @@ var VertexViewer = React.createClass({
         <VertexInput onChange={this.setVertex} value={this.state.input} />
         {loading}
         {error}
+        {visualizations}
         {vertex}
       </div>
     );
