@@ -29,7 +29,7 @@ function PropertyRow(props) {
   </tr>)
 }
 
-var VertexProperties = function(props) {
+var PropertiesView = function(props) {
   var properties = Object.keys(props.vertex.properties).map(function(key) {
     var v = props.vertex.properties[key];
     return <PropertyRow key={key} name={key} value={v} />
@@ -48,7 +48,8 @@ var VertexProperties = function(props) {
   )
 }
 
-var VertexEdges = function(props) {
+var EdgesView = function(props) {
+  console.log(props)
   var inEdges = Object.keys(props.vertex['in'])
   // Filter out edges with "hasInstance" in label
   .filter(key => key != 'hasInstance')
@@ -155,7 +156,8 @@ function ExpandoItem(props) {
 
 var PubmedLink = function(props) {
   var url = "https://www.ncbi.nlm.nih.gov/pubmed/" + props.id;
-  return <a href={url}>;
+  console.log(url);
+  return (<div><a href={url} target="_blank">{url}</a></div>)
 }
 
 var VertexViewer = React.createClass({
@@ -242,20 +244,21 @@ var VertexViewer = React.createClass({
 
     // The vertex isn't empty, so create a VertexView
     if (this.state.vertex.properties) {
-      vertex = <div><VertexProperties vertex={this.state.vertex} /><VertexEdges vertex={this.state.vertex} navigate={this.setVertex} /></div>
-    }
+      vertex = (<div><PropertiesView vertex={this.state.vertex} /><EdgesView vertex={this.state.vertex} navigate={this.setVertex} /></div>)
 
-    if (this.state.vertex.properties.type === 'Pubmed') {
-      var link = <PubmedLink id={this.state.vertex.properties.pmid}>
-      visualizations.push(link)
+      if (this.state.vertex.properties.type === 'Pubmed') {
+        console.log(this.state.vertex.properties);
+        var link = (<PubmedLink key="pubmed-link" id={this.state.vertex.properties.pmid} />)
+        visualizations.push(link);
+      }
     }
 
     return (
       <div>
         <VertexInput onChange={this.setVertex} value={this.state.input} />
         {loading}
-        {error}
         {visualizations}
+        {error}
         {vertex}
       </div>
     );
