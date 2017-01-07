@@ -161,15 +161,15 @@ var PubmedLink = function(props) {
 var VertexViewer = React.createClass({
   getInitialState() {
     return {
-      input: this.getVertexFromHash(),
+      input: this.getGIDFromURL(),
       loading: false,
       error: "",
       vertex: {},
     };
   },
 
-  getVertexFromHash() {
-    return window.location.hash.substr(1);
+  getGIDFromURL() {
+    return getParameterByName("gid")
   },
 
   componentDidMount() {
@@ -180,7 +180,7 @@ var VertexViewer = React.createClass({
   },
 
   onPopState(e) {
-    var hash = this.getVertexFromHash();
+    var hash = this.getGIDFromURL();
     if (e.state && e.state.gid) {
       this.setVertex(e.state.gid, true)
     } else if (hash) {
@@ -206,7 +206,7 @@ var VertexViewer = React.createClass({
             if (!nopushstate) {
               // Only push state to history if we found an actual vertex
               // This avoids pushing state for intermediate queries.
-              history.pushState({gid: gid}, "Vertex: " + gid, '#' + gid);
+              history.pushState({gid: gid}, "Vertex: " + gid, '?gid=' + gid);
             }
           } else {
             this.setState({vertex: {}, loading: false, error: ""})
@@ -265,3 +265,15 @@ var VertexViewer = React.createClass({
 window.addEventListener('load', function() {
   ReactDOM.render(<VertexViewer />, document.getElementById('vertex-explore'));
 })
+
+function getParameterByName(name, url) {
+    if (!url) {
+      url = window.location.href;
+    }
+    name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
