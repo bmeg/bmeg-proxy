@@ -35,13 +35,17 @@ class ProxyHandler(tornado.web.RequestHandler):
         result = response.read()
         self.write(result)
 
-    def post(self):   
+    def post(self, path=None):
+        url = self.url
+        if path is not None:
+            url = url + path
         payload = self.request.body
-        print "Proxy to %s request: %s" %(self.url, payload)
+        print "Proxy to %s request: %s" %(url, payload)
         headers = {'Content-Type': 'application/json', 'Accept': 'application/json'}
-        request = urllib2.Request(self.url, payload, headers=headers)
+        request = urllib2.Request(url, payload, headers=headers)
         response = urllib2.urlopen(request)
         result = response.read()
+        print "Result", result
         self.write(result)
 
 
