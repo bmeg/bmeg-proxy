@@ -1,6 +1,3 @@
-
-
-
 var PieChart = React.createClass({
   
   getInitialState: function() {
@@ -61,7 +58,6 @@ var PieChart = React.createClass({
       .attr('fill', function(d) { return color(d.data.title); })
       .attr('y', function(d, i) { return 20 * (i + 1); })
   },
-
   
   render: function() {
     return (

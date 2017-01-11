@@ -2,6 +2,71 @@ var snipPrefix = function(s) {
   return s.substring(s.indexOf(':') + 1);
 }
 
+var PieChart = React.createClass({
+  getInitialState: function() {
+    var pie = <div><img src='/static/ripple.gif' /></div>
+    return {pie: pie}
+  },
+  
+  componentDidMount() {
+    console.log('props')
+    console.log(this.props)
+    this.props.query(this.props.gene, function(results) {
+      console.log(results)
+      var res = []
+      for (var k in results['result'][0]) {
+        res.push( {"title" : k, "value" : results['result'][0][k]} )
+      }
+
+      console.log("res")
+      console.log(res)
+
+      var el = ReactFauxDOM.createElement('svg');
+      el.setAttribute('width', 800)
+      el.setAttribute('height', 250)
+      var cohort = res;
+      
+      var pie = d3.layout.pie().value(function(d) {return d.value});
+      var slices = pie(cohort);
+  
+      var arc = d3.svg.arc().innerRadius(0).outerRadius(100);
+      var color = d3.scale.category10();
+  
+      var svg = d3.select(el);
+      var g = svg.append('g').attr('transform', 'translate(300, 100)');
+  
+      console.log(svg);
+      console.log(slices);
+  
+      g.selectAll('path.piechart')
+        .data(slices)
+        .enter()
+        .append('path')
+        .attr('class', 'slice')
+        .attr('d', arc)
+        .attr('fill', function(d) {return color(d.data.value)});
+  
+      svg.append('g')
+        .attr('class', 'legend')
+        .selectAll('text')
+        .data(slices)
+        .enter()
+        .append('text')
+        .text(function(d) { return '- ' + d.data.title; })
+        .attr('fill', function(d) { return color(d.data.title); })
+        .attr('y', function(d, i) { return 20 * (i + 1); })
+  
+      this.setState({pie: el.toReact()});
+    }.bind(this));
+  },
+  
+  render: function() {
+    return (
+      <div>{this.state.pie}</div>
+    )
+  }
+})
+
 var VertexEdges = React.createClass({
   getInitialState: function() {
     return {};
@@ -218,7 +283,7 @@ var VertexViewer = React.createClass({
           this.setState({loading: false, error: err.toString()})
           console.error(url, status, err.toString())
         },
-        timeout: 3000,
+        timeout: 60000,
       });
     }
   },
@@ -226,7 +291,7 @@ var VertexViewer = React.createClass({
   render: function() {
     var loading = "";
     if (this.state.loading) {
-      loading = <div className="mdl-spinner mdl-js-spinner is-active"></div>
+      loading = <img src="/static/ripple.gif" width="50px" />
     }
 
     var error;
@@ -247,9 +312,17 @@ var VertexViewer = React.createClass({
       vertex = (<div><PropertiesView vertex={this.state.vertex} /><EdgesView vertex={this.state.vertex} navigate={this.setVertex} /></div>)
 
       if (this.state.vertex.properties.type === 'Pubmed') {
-        console.log(this.state.vertex.properties);
         var link = (<PubmedLink key="pubmed-link" id={this.state.vertex.properties.pmid} />)
         visualizations.push(link);
+      }
+
+      if (this.state.vertex.properties.type === 'Gene') {
+        var variantTypes = function(gene, result) {
+          Ophion().query().has("gid", ["gene:" + gene]).incoming("inGene").groupCount("variantClassification").by("variantClassification").cap(["variantClassification"]).execute(result)
+        }
+
+        var pie = <PieChart query={variantTypes} gene={this.state.vertex.properties.symbol} key='mutations-pie' />
+        visualizations.push(pie)
       }
     }
 
