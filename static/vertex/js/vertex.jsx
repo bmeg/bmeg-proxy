@@ -23,7 +23,7 @@ var PieChart = React.createClass({
 
       var el = ReactFauxDOM.createElement('svg');
       el.setAttribute('width', 800)
-      el.setAttribute('height', 250)
+      el.setAttribute('height', 300)
       var cohort = res;
       
       var pie = d3.layout.pie().value(function(d) {return d.value});
@@ -320,9 +320,15 @@ var VertexViewer = React.createClass({
         var variantTypes = function(gene, result) {
           Ophion().query().has("gid", ["gene:" + gene]).incoming("inGene").groupCount("variantClassification").by("variantClassification").cap(["variantClassification"]).execute(result)
         }
+        var variantTypePie = <PieChart query={variantTypes} gene={this.state.vertex.properties.symbol} key='variant-type-pie' />
 
-        var pie = <PieChart query={variantTypes} gene={this.state.vertex.properties.symbol} key='mutations-pie' />
-        visualizations.push(pie)
+        var mutations = function(gene, result) {
+          Ophion().query().has("gid", ["gene:" + gene]).incoming("inGene").outgoing("effectOf").outgoing("tumorSample").outgoing("sampleOf").has("tumorSite", []).groupCount("tumorSite").by("tumorSite").cap(["tumorSite"]).execute(result)
+        }
+        var mutationPie = <PieChart query={mutations} gene={this.state.vertex.properties.symbol} key='mutations-pie' />
+
+        visualizations.push(variantTypePie)
+        visualizations.push(mutationPie)
       }
     }
 
