@@ -9,22 +9,18 @@ var PieChart = React.createClass({
   },
   
   componentDidMount() {
-    console.log('props')
-    console.log(this.props)
-    this.props.query(this.props.gene, function(results) {
-      console.log(results)
-      var res = []
-      for (var k in results['result'][0]) {
-        res.push( {"title" : k, "value" : results['result'][0][k]} )
-      }
+    this.props.query(function(results) {
+      var cohort = Object.keys(results).map(function(key) {
+        return {"title": key, "value": results[key]};
+      })
 
-      console.log("res")
-      console.log(res)
+      cohort.sort(function(a, b) {
+        return a.value < b.value ? 1 : a.value > b.value ? -1 : 0;
+      })
 
       var el = ReactFauxDOM.createElement('svg');
-      el.setAttribute('width', 800)
-      el.setAttribute('height', 300)
-      var cohort = res;
+      el.setAttribute('width', 800);
+      el.setAttribute('height', 300);
       
       var pie = d3.layout.pie().value(function(d) {return d.value});
       var slices = pie(cohort);
@@ -44,7 +40,7 @@ var PieChart = React.createClass({
         .append('path')
         .attr('class', 'slice')
         .attr('d', arc)
-        .attr('fill', function(d) {return color(d.data.value)});
+        .attr('fill', function(d) {return color(d.data.title)});
   
       svg.append('g')
         .attr('class', 'legend')
@@ -225,6 +221,24 @@ var PubmedLink = function(props) {
   return (<div><a href={url} target="_blank">{url}</a></div>)
 }
 
+var queries = {
+  variantTypeCounts: function(gene) {
+    return function(callback) {
+      Ophion().query().has("gid", ["gene:" + gene]).incoming("inGene").groupCount("variantClassification").by("variantClassification").cap(["variantClassification"]).execute(function(result) {
+        callback(result['result'][0])
+      })
+    }
+  },
+
+  mutationCounts: function(gene) {
+    return function(callback) {
+      Ophion().query().has("gid", ["gene:" + gene]).incoming("inGene").outgoing("effectOf").outgoing("tumorSample").outgoing("sampleOf").has("tumorSite", []).groupCount("tumorSite").by("tumorSite").cap(["tumorSite"]).execute(function(result) {
+        callback(result['result'][0])
+      })
+    }
+  }
+}
+
 var VertexViewer = React.createClass({
   getInitialState() {
     return {
@@ -317,15 +331,9 @@ var VertexViewer = React.createClass({
       }
 
       if (this.state.vertex.properties.type === 'Gene') {
-        var variantTypes = function(gene, result) {
-          Ophion().query().has("gid", ["gene:" + gene]).incoming("inGene").groupCount("variantClassification").by("variantClassification").cap(["variantClassification"]).execute(result)
-        }
-        var variantTypePie = <PieChart query={variantTypes} gene={this.state.vertex.properties.symbol} key='variant-type-pie' />
-
-        var mutations = function(gene, result) {
-          Ophion().query().has("gid", ["gene:" + gene]).incoming("inGene").outgoing("effectOf").outgoing("tumorSample").outgoing("sampleOf").has("tumorSite", []).groupCount("tumorSite").by("tumorSite").cap(["tumorSite"]).execute(result)
-        }
-        var mutationPie = <PieChart query={mutations} gene={this.state.vertex.properties.symbol} key='mutations-pie' />
+        var gene = this.state.vertex.properties.symbol;
+        var variantTypePie = <PieChart query={queries.variantTypeCounts(gene)} key='variant-type-pie' />
+        var mutationPie = <PieChart query={queries.mutationCounts(gene)} key='mutations-pie' />
 
         visualizations.push(variantTypePie)
         visualizations.push(mutationPie)
