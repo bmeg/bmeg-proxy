@@ -2,6 +2,11 @@ var snipPrefix = function(s) {
   return s.substring(s.indexOf(':') + 1);
 }
 
+var nonalpha = /[^a-zA-Z]/g
+var keyify = function(s) {
+  return s.split(nonalpha).join('')
+}
+
 var PieChart = React.createClass({
   getInitialState: function() {
     var pie = <div><img src='/static/ripple.gif' /></div>
@@ -24,33 +29,42 @@ var PieChart = React.createClass({
       
       var pie = d3.layout.pie().value(function(d) {return d.value});
       var slices = pie(cohort);
-  
       var arc = d3.svg.arc().innerRadius(0).outerRadius(100);
       var color = d3.scale.category10();
-  
+
       var svg = d3.select(el);
       var g = svg.append('g').attr('transform', 'translate(300, 100)');
   
-      console.log(svg);
-      console.log(slices);
-  
       g.selectAll('path.piechart')
-        .data(slices)
+        .data(slices, function(d) {return d.data.title})
         .enter()
         .append('path')
-        .attr('class', 'slice')
+        .attr('class', function(d) {return 'slice ' + keyify(d.data.title)})
         .attr('d', arc)
         .attr('fill', function(d) {return color(d.data.title)});
   
       svg.append('g')
         .attr('class', 'legend')
         .selectAll('text')
-        .data(slices)
+        .data(slices, function(d) {return d.data.title})
         .enter()
         .append('text')
         .text(function(d) { return '- ' + d.data.title; })
         .attr('fill', function(d) { return color(d.data.title); })
         .attr('y', function(d, i) { return 20 * (i + 1); })
+        .on("mouseover", function(dOver, i) { 
+          console.log("mouseover " + keyify(dOver.data.title))
+          var key = keyify(dOver.data.title)
+          d3.selectAll('.slice.' + key)
+            .attr('fill', 'white')
+        })
+        .on("mouseout", function(dOut, i) { 
+          console.log("mouseout " + keyify(dOut.data.title))
+          var key = keyify(dOut.data.title)
+          d3.selectAll('.slice.' + key)
+            .data([dOut])
+            .attr('fill', color(dOut.data.title))
+        })
   
       this.setState({pie: el.toReact()});
     }.bind(this));
