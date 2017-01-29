@@ -45,6 +45,10 @@ function OphionQuery(parent) {
        query.push({'as': label})
        return this
     },
+    select: function(labels) {
+       query.push({'select': labels})
+       return this
+    },
     limit: function(l) {
        query.push({'limit': l})
        return this
