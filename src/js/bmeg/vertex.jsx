@@ -1,8 +1,9 @@
 import React from 'react';
 import {render} from 'react-dom';
 
-import PieChart from 'ceto';
-import VertexViewer from 'ceto';
+import {PieChart,VertexViewer,foo} from 'ceto';
+console.log(PieChart);
+console.log(foo);
 
 var PubmedLink = function(props) {
   var url = "https://www.ncbi.nlm.nih.gov/pubmed/" + props.id;
@@ -47,20 +48,11 @@ function generateVisualizations() {
   }
 }
 
-function getParameterByName(name, url) {
-  if (!url) {
-    url = window.location.href;
-  }
-  name = name.replace(/[\[\]]/g, "\\$&");
-  var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-  results = regex.exec(url);
-  if (!results) return null;
-  if (!results[2]) return '';
-  return decodeURIComponent(results[2].replace(/\+/g, " "));
-}
-
-ReactDOM.render(<VertexViewer visualizations={generateVisualizations()} />, document.getElementById('vertex-explore'));
-
+window.onload = function() {
+  console.log(document.getElementById('vertex-explore'));
+  render(<VertexViewer />, document.getElementById('vertex-explore'));
+    // ReactDOM.render(<VertexViewer visualizations={generateVisualizations()} />, document.getElementById('vertex-explore'));
+};
 
 
 
