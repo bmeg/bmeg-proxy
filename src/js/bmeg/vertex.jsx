@@ -2,12 +2,10 @@ import React from 'react';
 import {render} from 'react-dom';
 
 import {PieChart,VertexViewer,foo} from 'ceto';
-console.log(PieChart);
-console.log(foo);
+import {Ophion} from 'ophion';
 
 var PubmedLink = function(props) {
   var url = "https://www.ncbi.nlm.nih.gov/pubmed/" + props.id;
-  console.log(url);
   return (<div><a href={url} target="_blank">{url}</a></div>)
 }
 
@@ -50,8 +48,7 @@ function generateVisualizations() {
 
 window.onload = function() {
   console.log(document.getElementById('vertex-explore'));
-  render(<VertexViewer />, document.getElementById('vertex-explore'));
-    // ReactDOM.render(<VertexViewer visualizations={generateVisualizations()} />, document.getElementById('vertex-explore'));
+  render(<VertexViewer visualizations={generateVisualizations()} />, document.getElementById('vertex-explore'));
 };
 
 
