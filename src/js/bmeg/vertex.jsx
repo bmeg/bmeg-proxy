@@ -13,7 +13,8 @@ var queries = {
   variantTypeCounts: function(gene) {
     return function(callback) {
       Ophion().query().has("gid", ["gene:" + gene]).incoming("inGene").groupCount("variantClassification").by("variantClassification").cap(["variantClassification"]).execute(function(result) {
-        callback(result['result'][0])
+        console.log(result);
+        callback(result.result[0]);
       })
     }
   },
@@ -21,7 +22,8 @@ var queries = {
   mutationCounts: function(gene) {
     return function(callback) {
       Ophion().query().has("gid", ["gene:" + gene]).incoming("inGene").outgoing("effectOf").outgoing("tumorSample").outgoing("sampleOf").has("tumorSite", []).groupCount("tumorSite").by("tumorSite").cap(["tumorSite"]).execute(function(result) {
-        callback(result['result'][0])
+        console.log(result);
+        callback(result.result[0]);
       })
     }
   }
