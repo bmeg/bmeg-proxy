@@ -10,7 +10,7 @@
   "repository": "git@github.com:bmeg/gaia-bmeg.git",
   "license": "ISC",
   "dependencies": {
-    "ceto": "0.0.13",
-    "ophion": "0.0.8"
+    "ceto": "0.0.14",
+    "ophion": "0.0.11"
   }
 }

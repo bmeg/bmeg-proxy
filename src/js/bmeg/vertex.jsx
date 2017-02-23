@@ -12,7 +12,7 @@ var PubmedLink = function(props) {
 var queries = {
   variantTypeCounts: function(gene) {
     return function(callback) {
-      Ophion().query().has("gid", ["gene:" + gene]).incoming("inGene").groupCount("variantClassification").by("variantClassification").cap(["variantClassification"]).execute(function(result) {
+      Ophion().query().has("gid", ["gene:" + gene]).incoming("affectsGene").outgoing("termFor").groupCount("variant").by("term").cap(["variant"]).execute(function(result) {
         console.log(result);
         callback(result.result[0]);
       })
@@ -21,10 +21,46 @@ var queries = {
 
   mutationCounts: function(gene) {
     return function(callback) {
-      Ophion().query().has("gid", ["gene:" + gene]).incoming("inGene").outgoing("effectOf").outgoing("tumorSample").outgoing("sampleOf").has("tumorSite", []).groupCount("tumorSite").by("tumorSite").cap(["tumorSite"]).execute(function(result) {
+      Ophion().query().has("gid", ["gene:" + gene]).incoming("affectsGene").incoming("transcriptEffectOf").outgoing("annotationFor").outgoing("inCallSet").outgoing("callsFor").outgoing("diseaseOf").groupCount("term").by("term").cap(["term"]).execute(function(result) {
+        console.log(result);
+        callback(result.result[0]);
+      });
+    }
+  },
+
+  cohortCompounds: function(cohort) {
+    return function(callback) {
+      Ophion().query().has("gid", ["cohort:" + cohort]).outgoing("hasMember").incoming("responseOf").outgoing("responseTo").dedup().values(["gid"]).execute(function(result) {
         console.log(result);
         callback(result.result[0]);
       })
+    }
+  },
+
+  cohortGids: function(cohort) {
+    return function(callback) {
+      Ophion().query().has("gid", ["cohort:" + cohort]).outgoing("hasMember").mark("a").incoming("callsFor").select(["a"]).values(["gid"]).execute(function(result) {
+        console.log(result);
+        callback(result.result[0]);
+      });
+    }
+  },
+
+  samplesWithMutations: function(cohort, gene) {
+    return function(callback) {
+      Ophion().query().has("gid", ["gene:" + gene] ).incoming("affectsGene").incoming("transcriptEffectOf").outgoing("annotationFor").outgoing("inCallSet").outgoing("callsFor").mark("a").incoming("hasMember").has("gid", ["cohort:" + cohort]).select(["a"]).values(["gid"]).execute(function(result) {
+        console.log(result);
+        callback(result.result[0]);
+      });
+    }
+  },
+
+  sampleResponses: function(samples, drug) {
+    return function(callback) {
+      Ophion().query().has("gid", samples).incoming("responseOf").mark("a").outgoing("responseTo").has("gid", ['compound:' + drug]).select(["a"]).values(["gid", "responseSummary"]).execute(function(result) {
+        console.log(result);
+        callback(result.result[0]);
+      });
     }
   }
 }
@@ -48,92 +84,120 @@ function generateVisualizations() {
   }
 }
 
+// function drugResponseBoxPlot() {                
+//   Ophion().query().has("gid", ["cohort:CCLE"]).outgoing("hasMember").incoming("responseOf").outgoing("responseTo").dedup().values(["gid"]).execute( 
+//     function(x) {
+//       console.log("Got " + Object.keys(x))
+//       var sel = $("#myDrugs");
+//       $.unique($(x['result'])).each(function() {
+//         sel.append($("<option>").attr('value',this).text(this));
+//       });
+//     }
+//   )
+  
+//   var all_samples = []
+//   Ophion().query().has("gid", ["cohort:CCLE"]).outgoing("hasMember").mark("a").incoming("callsFor").select(["a"]).values(["gid"]).execute(
+//     function(x) {
+//       all_samples = $.unique(x['result'])
+//     }
+//   )
+  
+//   var mutant_samples = [];
+//   var normal_samples = [];
+//   var mutant_vals = [];
+//   var normal_vals = [];
+  
+//   doUpdate = function() {
+//     console.log( $("#myInput").val() + $("#myDrugs").val())
+//     mutant_samples = [];
+//     normal_samples = [];
+//     mutant_vals = [];
+//     normal_vals = [];
+//     $("#myDiv").empty();
+//     Ophion().query().has("gid", ["gene:" + $("#myInput").val()] ).incoming("affectsGene").
+//       incoming("transcriptEffectOf").outgoing("annotationFor").
+//       outgoing("inCallSet").outgoing("callsFor").mark("a").
+//       incoming("hasMember").has("gid", ["cohort:CCLE"]).
+//       select(["a"]).values(["gid"]).execute(
+//         function(x) {
+//           mutant_samples = $.unique(x['result'])
+//           if (mutant_samples.length > 0) {
+//             console.log("Got mutants: " + mutant_samples)
+//             normal_samples = all_samples.filter( function(x) { return mutant_samples.indexOf( x ) < 0; } )
+//             doGetMutVals();
+//           }
+//         }
+//       )
+//   }
+  
+//   doGetMutVals = function() {
+//     Ophion().query().has("gid", mutant_samples).incoming("responseOf").mark("a").outgoing("responseTo").
+//       has("gid", [$("#myDrugs").val()] ).select(["a"]).values(["gid", "responseSummary"]).execute(
+//         function(x) {
+//           out = [];
+//           for (var i = 1; i < x['result'].length; i += 2) {
+//             var y = JSON.parse(x['result'][i]);
+//             // var y = x['result'][i];
+//             console.log(y);
+//             var amax = y.filter(
+//               function(x){
+//                 return x['type'] == "AMAX"
+//               })
+//             if (amax[0]) {
+//               out.push(amax[0]['value'])
+//             }
+//           }
+//           mutant_vals = out;
+//           doGetNormVals()
+//         }
+//       )
+//   }
+  
+//   doGetNormVals = function() {
+//     Ophion().query().has("gid", normal_samples).incoming("responseOf").mark("a").outgoing("responseTo").
+//       has("gid", [$("#myDrugs").val()] ).select(["a"]).values(["gid", "responseSummary"]).execute(
+//         function(x) {
+//           out = [];
+//           for (var i = 1; i < x['result'].length; i += 2) {
+//             var y = JSON.parse(x['result'][i]);
+//             // var y = x['result'][i];
+//             var amax = y.filter(
+//               function(x){
+//                 return x['type'] == "AMAX"
+//               })
+//             if (amax[0]) {
+//               out.push(amax[0]['value'])
+//             }
+//           }
+//           normal_vals = out;
+//           doDraw()
+//         }
+//       )
+//   }
+  
+//   doDraw = function() {
+//     var mutant = {
+//       y: mutant_vals,
+//       type: 'box'
+//     };
+
+//     var normal = {
+//       y: normal_vals,
+//       type: 'box'
+//     };
+//     var data = [mutant, normal];
+//     Plotly.newPlot('myDiv', data);
+//   }
+  
+//   $("#myInput").on('change keydown paste input', doUpdate);
+//   $("#myDrugs").on('change keydown paste input', doUpdate);
+// }
+
 window.onload = function() {
   console.log(document.getElementById('vertex-explore'));
   render(<VertexViewer visualizations={generateVisualizations()} />, document.getElementById('vertex-explore'));
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // setVertex(gid, nopushstate) {
-  //   if (!gid) {
-  //     this.setState({vertex: {}, error: ""})
-  //   } else {
-  //     var url = "/gaia/vertex/find/" + gid;
-  //     this.setState({input: gid, loading: true, error: ""});
-  //     $.ajax({
-  //       url: url,
-  //       dataType: 'json',
-  //       type: 'GET',
-  //       success: result => {
-  //         if (Object.keys(result).length > 0) {
-  //           this.setState({vertex: result, loading: false, error: ""})
-  //           if (!nopushstate) {
-  //             // Only push state to history if we found an actual vertex
-  //             // This avoids pushing state for intermediate queries.
-  //             history.pushState({gid: gid}, "Vertex: " + gid, '?gid=' + gid);
-  //           }
-  //         } else {
-  //           this.setState({vertex: {}, loading: false, error: ""})
-  //         }
-  //       },
-  //       error: (xhr, status, err) => {
-  //         this.setState({loading: false, error: err.toString()})
-  //         console.error(url, status, err.toString())
-  //       },
-  //       timeout: 60000,
-  //     });
-  //   }
-  // },
-
-  // render: function() {
-  //   var loading = "";
-  //   if (this.state.loading) {
-  //     loading = <img src="/static/ripple.gif" width="50px" />
-  //   }
-
-  //   var error;
-  //   if (this.state.error) {
-  //     error = <div>Request error: {this.state.error}</div>
-  //   }
-
-  //   var emptyMessage = "";
-  //   if (this.state.input) {
-  //     emptyMessage = "No vertex found";
-  //   }
-
-  //   var vertex = <div className="empty-vertex">{emptyMessage}</div>;
-  //   var visualizations = [];
-
-  //   // The vertex isn't empty, so create a VertexView
-  //   if (this.state.vertex.properties) {
-  //     vertex = (<div><PropertiesView vertex={this.state.vertex} /><EdgesView vertex={this.state.vertex} navigate={this.setVertex} /></div>)
-
-  //     if (this.state.vertex.properties.type === 'Pubmed') {
-  //       var link = (<PubmedLink key="pubmed-link" id={this.state.vertex.properties.pmid} />)
-  //       visualizations.push(link);
-  //     }
-
-  //     if (this.state.vertex.properties.type === 'Gene') {
-  //       var gene = this.state.vertex.properties.symbol;
-  //       var variantTypePie = <PieChart query={queries.variantTypeCounts(gene)} key='variant-type-pie' />
-  //       var mutationPie = <PieChart query={queries.mutationCounts(gene)} key='mutations-pie' />
-
-  //       visualizations.push(variantTypePie)
-  //       visualizations.push(mutationPie)
-  //     }
-//   }
-
+export {
+  queries
+}
