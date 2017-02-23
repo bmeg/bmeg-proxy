@@ -34,7 +34,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <script src="/static/mutation/ophion.js"></script>
+    <script src="/static/js/ophion.js"></script>
+    <!-- <script src="/static/mutation/ophion.js"></script> -->
     <style>
     #view-source {
       position: fixed;
@@ -70,9 +71,9 @@
 
                 <script>
                 
-                Ophion().query().has("gid", ["cohort:CCLE"]).outgoing("hasMember").incoming("responseOf").outgoing("responseTo").values(["gid"]).execute( 
+                Ophion().query().has("gid", ["cohort:CCLE"]).outgoing("hasMember").incoming("responseOf").outgoing("responseTo").dedup().values(["gid"]).execute( 
                     function(x) {
-                      console.log("Got " + x)
+                      console.log("Got " + Object.keys(x))
                       var sel = $("#myDrugs");
                       $.unique($(x['result'])).each(function() {
                         sel.append($("<option>").attr('value',this).text(this));
@@ -122,11 +123,15 @@
                       out = [];
                       for (var i = 1; i < x['result'].length; i += 2) {
                         var y = JSON.parse(x['result'][i]);
-                        var z = y.filter(
+                        // var y = x['result'][i];
+                        console.log(y);
+                        var amax = y.filter(
                           function(x){
                             return x['type'] == "AMAX"
-                          })[0]['value']
-                        out.push(z)
+                          })
+                        if (amax[0]) {
+                          out.push(amax[0]['value'])
+                        }
                       }
                       mutant_vals = out;
                       doGetNormVals()
@@ -141,11 +146,14 @@
                       out = [];
                       for (var i = 1; i < x['result'].length; i += 2) {
                         var y = JSON.parse(x['result'][i]);
-                        var z = y.filter(
+                        // var y = x['result'][i];
+                        var amax = y.filter(
                           function(x){
                             return x['type'] == "AMAX"
-                          })[0]['value']
-                        out.push(z)
+                          })
+                        if (amax[0]) {
+                          out.push(amax[0]['value'])
+                        }
                       }
                       normal_vals = out;
                       doDraw()
