@@ -12,6 +12,7 @@
   "dependencies": {
     "ceto": "0.0.17",
     "navigo": "4.0.1",
-    "ophion": "0.0.11"
+    "ophion": "0.0.11",
+    "plotly": "^1.0.6"
   }
 }

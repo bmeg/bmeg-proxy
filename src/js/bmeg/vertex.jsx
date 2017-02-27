@@ -2,6 +2,7 @@ import React,{Component} from 'react';
 import {render} from 'react-dom';
 import * as Navigo from 'navigo';
 import * as _ from 'underscore';
+import * as classNames from 'classnames';
 import cytoscape from 'cytoscape';
 
 // import {PieChart,VertexViewer,SchemaGraph,foo} from 'ceto';
@@ -38,11 +39,20 @@ var queries = {
     }
   },
 
+  geneExists: function(gene, callback) {
+    Ophion().query().has("gid", ["gene:" + gene]).execute(function(result) {
+      console.log(result);
+      callback(!_.isEmpty(result.result));
+    });
+  },
+
   cohortCompounds: function(cohort) {
     return function(callback) {
-      Ophion().query().has("gid", ["cohort:" + cohort]).outgoing("hasMember").incoming("responseOf").outgoing("responseTo").dedup().values(["gid"]).execute(function(result) {
+      Ophion().query().has("gid", ["type:Compound"]).outgoing("hasInstance").values(["gid"]).execute(function(result) {
+      // Ophion().query().has("gid", ["cohort:" + cohort]).outgoing("hasMember").incoming("responseOf").outgoing("responseTo").dedup().values(["gid"]).execute(function(result) {
+        
         console.log(result);
-        callback(result.result[0]);
+        callback(result.result);
       })
     }
   },
@@ -51,7 +61,7 @@ var queries = {
     return function(callback) {
       Ophion().query().has("gid", ["cohort:" + cohort]).outgoing("hasMember").mark("a").incoming("callsFor").select(["a"]).values(["gid"]).execute(function(result) {
         console.log(result);
-        callback(result.result[0]);
+        callback(result.result);
       });
     }
   },
@@ -60,16 +70,17 @@ var queries = {
     return function(callback) {
       Ophion().query().has("gid", ["gene:" + gene] ).incoming("affectsGene").incoming("transcriptEffectOf").outgoing("annotationFor").outgoing("inCallSet").outgoing("callsFor").mark("a").incoming("hasMember").has("gid", ["cohort:" + cohort]).select(["a"]).values(["gid"]).execute(function(result) {
         console.log(result);
-        callback(result.result[0]);
+        callback(result.result);
       });
     }
   },
 
   sampleResponses: function(samples, drug) {
     return function(callback) {
-      Ophion().query().has("gid", samples).incoming("responseOf").mark("a").outgoing("responseTo").has("gid", ['compound:' + drug]).select(["a"]).values(["gid", "responseSummary"]).execute(function(result) {
+      Ophion().query().has("gid", ['compound:' + drug]).incoming("responseTo").mark('a').outgoing('responseOf').has("gid", samples).select(['a']).values(['responseSummary']).execute(function(result) {
+      // Ophion().query().has("gid", samples).incoming("responseOf").mark("a").outgoing("responseTo").has("gid", ['compound:' + drug]).select(["a"]).values(["gid", "responseSummary"]).execute(function(result) {
         console.log(result);
-        callback(result.result[0]);
+        callback(result.result);
       });
     }
   }
@@ -88,120 +99,187 @@ function generateVisualizations() {
     return <PubmedLink key="pubmed-link" id={vertex.properties.pmid} />;
   }
 
+  function drugResponse(vertex) {
+    return <DrugResponse cohort={vertex.properties.name} />
+  }
+
   return {
     'Gene': [variantTypePie, mutationPie],
-    'Pubmed': [pubmedLink]
+    'Pubmed': [pubmedLink],
+    'Cohort': [drugResponse]
   }
 }
 
-// function drugResponseBoxPlot() {                
-//   Ophion().query().has("gid", ["cohort:CCLE"]).outgoing("hasMember").incoming("responseOf").outgoing("responseTo").dedup().values(["gid"]).execute( 
-//     function(x) {
-//       console.log("Got " + Object.keys(x))
-//       var sel = $("#myDrugs");
-//       $.unique($(x['result'])).each(function() {
-//         sel.append($("<option>").attr('value',this).text(this));
-//       });
-//     }
-//   )
-  
-//   var all_samples = []
-//   Ophion().query().has("gid", ["cohort:CCLE"]).outgoing("hasMember").mark("a").incoming("callsFor").select(["a"]).values(["gid"]).execute(
-//     function(x) {
-//       all_samples = $.unique(x['result'])
-//     }
-//   )
-  
-//   var mutant_samples = [];
-//   var normal_samples = [];
-//   var mutant_vals = [];
-//   var normal_vals = [];
-  
-//   doUpdate = function() {
-//     console.log( $("#myInput").val() + $("#myDrugs").val())
-//     mutant_samples = [];
-//     normal_samples = [];
-//     mutant_vals = [];
-//     normal_vals = [];
-//     $("#myDiv").empty();
-//     Ophion().query().has("gid", ["gene:" + $("#myInput").val()] ).incoming("affectsGene").
-//       incoming("transcriptEffectOf").outgoing("annotationFor").
-//       outgoing("inCallSet").outgoing("callsFor").mark("a").
-//       incoming("hasMember").has("gid", ["cohort:CCLE"]).
-//       select(["a"]).values(["gid"]).execute(
-//         function(x) {
-//           mutant_samples = $.unique(x['result'])
-//           if (mutant_samples.length > 0) {
-//             console.log("Got mutants: " + mutant_samples)
-//             normal_samples = all_samples.filter( function(x) { return mutant_samples.indexOf( x ) < 0; } )
-//             doGetMutVals();
-//           }
-//         }
-//       )
-//   }
-  
-//   doGetMutVals = function() {
-//     Ophion().query().has("gid", mutant_samples).incoming("responseOf").mark("a").outgoing("responseTo").
-//       has("gid", [$("#myDrugs").val()] ).select(["a"]).values(["gid", "responseSummary"]).execute(
-//         function(x) {
-//           out = [];
-//           for (var i = 1; i < x['result'].length; i += 2) {
-//             var y = JSON.parse(x['result'][i]);
-//             // var y = x['result'][i];
-//             console.log(y);
-//             var amax = y.filter(
-//               function(x){
-//                 return x['type'] == "AMAX"
-//               })
-//             if (amax[0]) {
-//               out.push(amax[0]['value'])
-//             }
-//           }
-//           mutant_vals = out;
-//           doGetNormVals()
-//         }
-//       )
-//   }
-  
-//   doGetNormVals = function() {
-//     Ophion().query().has("gid", normal_samples).incoming("responseOf").mark("a").outgoing("responseTo").
-//       has("gid", [$("#myDrugs").val()] ).select(["a"]).values(["gid", "responseSummary"]).execute(
-//         function(x) {
-//           out = [];
-//           for (var i = 1; i < x['result'].length; i += 2) {
-//             var y = JSON.parse(x['result'][i]);
-//             // var y = x['result'][i];
-//             var amax = y.filter(
-//               function(x){
-//                 return x['type'] == "AMAX"
-//               })
-//             if (amax[0]) {
-//               out.push(amax[0]['value'])
-//             }
-//           }
-//           normal_vals = out;
-//           doDraw()
-//         }
-//       )
-//   }
-  
-//   doDraw = function() {
-//     var mutant = {
-//       y: mutant_vals,
-//       type: 'box'
-//     };
+/////////////////////////////////////////////////////////
+/////////////// DRUG RESPONSE
+////////////////////////////////////////////////
 
-//     var normal = {
-//       y: normal_vals,
-//       type: 'box'
-//     };
-//     var data = [mutant, normal];
-//     Plotly.newPlot('myDiv', data);
-//   }
-  
-//   $("#myInput").on('change keydown paste input', doUpdate);
-//   $("#myDrugs").on('change keydown paste input', doUpdate);
-// }
+class GeneInput extends Component {
+  componentDidMount() {
+    componentHandler.upgradeElement(this.refs.mdlWrapper)
+  }
+
+  render() {
+    return <div
+      className="mdl-textfield mdl-js-textfield mdl-textfield--floating-label"
+      ref="mdlWrapper"
+    >
+      <label
+        className="mdl-textfield__label"
+        htmlFor="vertex-gid-input"
+      >Enter a gene name</label>
+      <input
+        id="gene-response-input"
+        type="text"
+        name="gene"
+        className="mdl-textfield__input"
+        onChange={e => this.props.onChange(e.target.value)}
+        value={this.props.value}
+      />
+    </div>
+  }
+}
+
+class DrugSelect extends Component {
+  constructor(props) {
+    super(props)
+    this.fetchCompounds = queries.cohortCompounds(props.cohort)
+    this.state = {
+      drugs: [],
+      selected: "",
+      loaded: false
+    }
+  }
+
+  componentDidMount() {
+    console.log(this.props)
+    var self = this;
+    this.fetchCompounds(function(drugs) {
+      var plain = drugs.map(function(drug) {return drug.slice(9)})
+      console.log(plain)
+      self.setState({drugs: plain, loaded: true, selected: plain[0]});
+      self.props.selectDrug(plain[0])
+    })
+  }
+
+  selectDrug(event) {
+    var drug = event.target.value
+    this.setState({selected: drug})
+    this.props.selectDrug(drug)
+  }
+
+  render() {
+    if (this.state.loaded) {
+      var drugOptions = this.state.drugs.map(function(drug) {
+        return <option value={drug} key={drug}>{drug}</option>
+      })
+
+      return (
+          <div>
+            <select value={this.state.selected} onChange={this.selectDrug.bind(this)}>
+              {drugOptions}
+            </select>
+          </div>
+      )
+    } else {
+      return <div>loading compounds....</div>
+    }
+  }
+}
+
+class DrugResponse extends Component {
+  constructor(props) {
+    super(props)
+    this.fetchSamples = queries.cohortGids(props.cohort)
+    this.state = {
+      loaded: false,
+      samples: [],
+      mutants: [],
+      normals: [],
+      mutantResponses: [],
+      normalResponses: [],
+      drug: "",
+      input: ""
+    }
+  }
+
+  componentDidMount() {
+    var self = this
+    this.fetchSamples(function(samples) {
+      console.log(samples)
+      self.setState({samples: samples})
+    })
+  }
+
+  selectDrug(drug) {
+    console.log('set drug to ' + drug)
+    this.setState({drug: drug})
+    this.setGene(this.state.input)
+  }
+
+  extractResponses(responses) {
+    return responses.map(function(mutant) {
+      var response = JSON.parse(mutant)
+      var amax = response.filter(function(r) {return r['type'] === 'EC50'}) // 'AMAX'})
+      if (!_.isEmpty(amax)) {
+        return amax[0]['value']
+      }
+    }).filter(function(x) {return x && x > -100 && x < 100});
+  }
+
+  setGene(gene) {
+    console.log(gene)
+    var self = this
+    self.setState({input: gene})
+    queries.geneExists(gene, function(exists) {
+      if (exists) {
+        var fetchMutants = queries.samplesWithMutations(self.props.cohort, gene)
+        fetchMutants(function(mutants) {
+          var normals = _.difference(self.state.samples, mutants)
+          self.setState({mutants: mutants, normals: normals})
+          console.log("mutants: " + mutants.length)
+          console.log("normals: " + normals.length)
+
+          var drug = self.state.drug; // self.refs.drugselect.state.selected
+          var fetchMutantResponses = queries.sampleResponses(mutants, drug)
+          var fetchNormalResponses = queries.sampleResponses(normals, drug)
+
+          if (!_.isEmpty(mutants)) {
+            fetchMutantResponses(function(mresponses) {
+              console.log(mresponses)
+              fetchNormalResponses(function(nresponses) {
+                console.log(nresponses)
+                var mutantResponses = self.extractResponses(mresponses)
+                var normalResponses = self.extractResponses(nresponses)
+                console.log(mutantResponses)
+                console.log(normalResponses)
+                self.setState({mutantResponses: mutantResponses, normalResponses: normalResponses})
+                Plotly.newPlot(
+                  'response-plot',
+                  [{name: 'mutation samples', y: mutantResponses, type: 'box'},
+                   {name: 'normal samples', y: normalResponses, type: 'box'}])
+              })
+            })
+          }
+        })
+      } else {
+        self.setState({mutants: [], normals: []})
+      }
+    })
+  }
+
+  render() {
+    return (
+      <div>
+        <span className="informative-header">Visualize drug responses for samples containing a mutation in the given gene</span>
+        <GeneInput value={this.state.input} onChange={this.setGene.bind(this)} />
+        <DrugSelect ref="drugselect" cohort={this.props.cohort} selectDrug={this.selectDrug.bind(this)} />
+        <div id="response-plot"></div>
+      </div>
+    )
+  }
+}
+
 
 
 
@@ -248,7 +326,7 @@ var VertexEdges = React.createClass({
   render: function() {
     var props = this.props;
     var prefix = props.edges[0].split(':')[0]
-    var header = props.label + " (" + props.direction + " " + prefix + ")";
+    var header = <span>{props.label + ' '}<span className="edge-direction">({props.direction} {prefix})</span></span>
 
     var items = props.edges.map(gid => (
       <ExpandoItem key={gid}>
@@ -331,11 +409,12 @@ var EdgesView = function(props) {
 
 var VertexInput = React.createClass({
   componentDidMount() {
-    // componentHandler.upgradeElement(this.refs.mdlWrapper)
+    componentHandler.upgradeElement(this.refs.mdlWrapper)
   },
   render() {
     return <div
       className="mdl-textfield mdl-js-textfield mdl-textfield--floating-label"
+      ref="mdlWrapper"
     >
       <label
         className="mdl-textfield__label"
@@ -350,23 +429,6 @@ var VertexInput = React.createClass({
         value={this.props.value}
       />
     </div>
-    // return <div
-    //   className="mdl-textfield mdl-js-textfield mdl-textfield--floating-label"
-    //   ref="mdlWrapper"
-    // >
-    //   <label
-    //     className="mdl-textfield__label"
-    //     htmlFor="vertex-gid-input"
-    //   >Enter a vertex GID</label>
-    //   <input
-    //     id="vertex-gid-input"
-    //     type="text"
-    //     name="gid"
-    //     className="mdl-textfield__input"
-    //     onChange={e => this.props.onChange(e.target.value)}
-    //     value={this.props.value}
-    //   />
-    // </div>
   },
 })
 
@@ -397,15 +459,13 @@ var Expando = React.createClass({
         {props.header}
       </a>
       <div className="mdl-collapse__content-wrapper expando-content">
-        <div className="mdl-collapse__content mdl-animation--default">
+        <div className="mdl-collapse__content mdl-animation--default" ref="content">
           {props.children}
         </div>
       </div>
     </div>)
   }
 })
-
-//        <div className="mdl-collapse__content mdl-animation--default" ref="content">
 
 function ExpandoItem(props) {
   return <span className="mdl-navigation__link">{props.children}</span>
@@ -431,7 +491,7 @@ var VertexViewer = React.createClass({
   },
 
   getGIDFromURL() {
-    return getParameterByName("gid") || this.props.label;
+    return getParameterByName("gid") || "";
   },
 
   componentDidMount() {
@@ -454,7 +514,7 @@ var VertexViewer = React.createClass({
 
   setVertex(gid, nopushstate) {
     if (!gid) {
-      this.setState({vertex: {}, error: ""})
+      this.setState({vertex: {}, error: "", input: ""})
     } else {
       var we = this;
       this.setState({input: gid, loading: true, error: ""});
@@ -690,6 +750,25 @@ class SchemaGraph extends Component {
   }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/////////////////////////////////////////
+///// SCHEMA VIEWER
+//////////////////////////////
+
 class SchemaViewer extends Component {
   constructor(props) {
     super(props)
@@ -749,18 +828,25 @@ function schemaViewer(router) {
   render(<SchemaViewer width={width} height={height} schema={schema} />, document.getElementById('vertex-explore'));
 }
 
-function initialize() {
-  var router = new Navigo(null, false);
+function drugResponse(router) {
+  var drugs = ["yellow", "green", "cerise", "blue"]
+  render(<DrugResponse cohort={"CCLE"} />, document.getElementById('vertex-explore'))
+}
 
-  router
-    .on('/vertex/:gid', function(params) {
-      console.log(params.gid);
-    })
-    .on(function() {
-      schemaViewer()
-    }).resolve()
+function initialize() {
+  // var router = new Navigo(null, false);
+
+  // router
+  //   .on('/vertex/:gid', function(params) {
+  //     console.log(params.gid);
+  //   })
+  //   .on(function() {
+  //     schemaViewer()
+  //   }).resolve()
 
   console.log(document.getElementById('vertex-explore'));
+  schemaViewer()
+  // drugResponse()
 }
 
 window.onload = function() { initialize() };
