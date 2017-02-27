@@ -431,7 +431,7 @@ var VertexViewer = React.createClass({
   },
 
   getGIDFromURL() {
-    return getParameterByName("gid")
+    return getParameterByName("gid") || this.props.label;
   },
 
   componentDidMount() {
@@ -693,6 +693,7 @@ class SchemaGraph extends Component {
 class SchemaViewer extends Component {
   constructor(props) {
     super(props)
+    self = this;
     this.state = {
       schema: {},
       loaded: false,
@@ -702,32 +703,28 @@ class SchemaViewer extends Component {
     this.events = {
       tap: function(cy) {
         console.log(this.id());
+        self.setState({label: this.id().toLowerCase()});
       }
     }
   }
 
   componentDidMount() {
-    console.log('mouhnting')
+    console.log('mounting')
 
     var self = this;
     queries.schema(function(schema) {
       self.setState({schema: schema, loaded: true})
       self.refs.schema.cytoscape().on('tap', 'node', self.events.tap);
-      // self.refs.schema.cytoscape().on('tap', 'node', function(cy) {
-      //   console.log(this.id())
-      // });
     });
   }
 
   render() {
     if (this.state.label) {
-      return (
-          <VertexViewer label={this.state.label} visualizations={generateVisualizations()} />, document.getElementById('vertex-explore')
-      )
+      return <VertexViewer label={this.state.label} visualizations={generateVisualizations()} />
+
     } else if (this.state.loaded) {
-      return (
-        <SchemaGraph ref="schema" width={this.props.width} height={this.props.height} schema={this.state.schema} />
-      )
+      return <SchemaGraph ref="schema" width={this.props.width} height={this.props.height} schema={this.state.schema} />
+
     } else {
       return <div>loading....</div>
     }
@@ -762,11 +759,6 @@ function initialize() {
     .on(function() {
       schemaViewer()
     }).resolve()
-
-  // render(<VertexViewer visualizations={generateVisualizations()} />, document.getElementById('vertex-explore'));
-  // queries.schema(function(schema) {
-  //   render(<SchemaGraph schema={schema} width={width} height={height} />, document.getElementById('vertex-explore'));
-  // });
 
   console.log(document.getElementById('vertex-explore'));
 }
