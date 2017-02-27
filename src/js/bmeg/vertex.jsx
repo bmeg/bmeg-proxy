@@ -1,7 +1,7 @@
 import React from 'react';
 import {render} from 'react-dom';
 
-import {PieChart,VertexViewer,foo} from 'ceto';
+import {PieChart,VertexViewer,SchemaGraph,foo} from 'ceto';
 import {Ophion} from 'ophion';
 
 var PubmedLink = function(props) {
@@ -10,6 +10,12 @@ var PubmedLink = function(props) {
 }
 
 var queries = {
+  schema: function(callback) {
+    fetch('/gaia/schema/protograph').then(function(response) {
+      response.json().then(callback);
+    });
+  },
+
   variantTypeCounts: function(gene) {
     return function(callback) {
       Ophion().query().has("gid", ["gene:" + gene]).incoming("affectsGene").outgoing("termFor").groupCount("variant").by("term").cap(["variant"]).execute(function(result) {
@@ -194,8 +200,13 @@ function generateVisualizations() {
 // }
 
 window.onload = function() {
+  var width = 800;
+  var height = 800;
   console.log(document.getElementById('vertex-explore'));
-  render(<VertexViewer visualizations={generateVisualizations()} />, document.getElementById('vertex-explore'));
+  // render(<VertexViewer visualizations={generateVisualizations()} />, document.getElementById('vertex-explore'));
+  queries.schema(function(schema) {
+    render(<SchemaGraph schema={schema} width={width} height={height} />, document.getElementById('vertex-explore'));
+  });
 };
 
 export {
