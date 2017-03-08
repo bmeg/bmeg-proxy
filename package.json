@@ -10,9 +10,23 @@
   "repository": "git@github.com:bmeg/gaia-bmeg.git",
   "license": "ISC",
   "dependencies": {
-    "ceto": "0.0.17",
+    "ceto": "0.0.23",
     "navigo": "4.0.1",
     "ophion": "0.0.11",
-    "plotly": "^1.0.6"
+    "plotly": "1.0.6"
+  },
+  "devDependencies": {
+    "babel-cli": "latest",
+    "babel-core": "latest",
+    "babel-eslint": "latest",
+    "babel-loader": "latest",
+    "babel-preset-es2015": "latest",
+    "babel-preset-react": "latest",
+    "babel-preset-stage-0": "latest",
+    "eslint": "latest",
+    "eslint-loader": "latest",
+    "eslint-plugin-babel": "latest",
+    "eslint-plugin-react": "latest",
+    "webpack": "latest"
   }
 }
