@@ -1,13 +1,41 @@
 import React,{Component} from 'react';
 import {render} from 'react-dom';
-import * as Navigo from 'navigo';
 import * as _ from 'underscore';
-import * as classNames from 'classnames';
+// import * as classNames from 'classnames';
 import cytoscape from 'cytoscape';
+import * as ReactFauxDOM from 'react-faux-dom';
+import * as d3 from 'd3';
+import {Ophion} from 'ophion';
 
 // import {PieChart,VertexViewer,SchemaGraph,foo} from 'ceto';
-import {PieChart} from 'ceto';
-import {Ophion} from 'ophion';
+// import {PieChart} from 'ceto';
+
+var hasOwn = {}.hasOwnProperty;
+
+function classNames () {
+	var classes = [];
+
+	for (var i = 0; i < arguments.length; i++) {
+		var arg = arguments[i];
+		if (!arg) continue;
+
+		var argType = typeof arg;
+
+		if (argType === 'string' || argType === 'number') {
+			classes.push(arg);
+		} else if (Array.isArray(arg)) {
+			classes.push(classNames.apply(null, arg));
+		} else if (argType === 'object') {
+			for (var key in arg) {
+				if (hasOwn.call(arg, key) && arg[key]) {
+					classes.push(key);
+				}
+			}
+		}
+	}
+
+	return classes.join(' ');
+}
 
 var PubmedLink = function(props) {
   var url = "https://www.ncbi.nlm.nih.gov/pubmed/" + props.id;
@@ -109,6 +137,112 @@ function generateVisualizations() {
     'Cohort': [drugResponse]
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+////////////////////////////////////////////////
+////////////// PIE CHART
+///////////////////////////////////////////
+
+var nonalpha = /[^a-zA-Z]/g
+var keyify = function(s) {
+  return s.split(nonalpha).join('')
+}
+
+var PieChart = React.createClass({
+  getInitialState: function() {
+    var pie = <div><img src='/static/ripple.gif' /></div>
+    return {pie: pie}
+  },
+  
+  buildPie: function(data) {
+    var cohort = Object.keys(data).map(function(key) {
+      return {"title": key, "value": data[key]};
+    })
+
+    cohort.sort(function(a, b) {
+      return a.value < b.value ? 1 : a.value > b.value ? -1 : 0;
+    })
+
+    var el = ReactFauxDOM.createElement('svg');
+    el.setAttribute('width', 800);
+    el.setAttribute('height', 300);
+    
+    var pie = d3.pie().value(function(d) {return d.value});
+    var slices = pie(cohort);
+    var arc = d3.arc().innerRadius(0).outerRadius(100);
+    var color = d3.scaleOrdinal(d3.schemeCategory20b);
+
+    var svg = d3.select(el);
+    var g = svg.append('g').attr('transform', 'translate(300, 100)');
+    
+    g.selectAll('path.piechart')
+      .data(slices, function(d) {return d.data.title})
+      .enter()
+      .append('path')
+      .attr('class', function(d) {return 'slice ' + keyify(d.data.title)})
+      .attr('d', arc)
+      .attr('fill', function(d) {return color(d.data.title)});
+    
+    svg.append('g')
+      .attr('class', 'legend')
+      .selectAll('text')
+      .data(slices, function(d) {return d.data.title})
+      .enter()
+      .append('text')
+      .text(function(d) { return '- ' + d.data.title; })
+      .attr('fill', function(d) { return color(d.data.title); })
+      .attr('y', function(d, i) { return 20 * (i + 1); })
+      .on("mouseover", function(dOver, i) { 
+        console.log("mouseover " + keyify(dOver.data.title))
+        var key = keyify(dOver.data.title)
+        d3.selectAll('.slice.' + key)
+          .attr('fill', 'white')
+      })
+      .on("mouseout", function(dOut, i) { 
+        console.log("mouseout " + keyify(dOut.data.title))
+        var key = keyify(dOut.data.title)
+        d3.selectAll('.slice.' + key)
+          .data([dOut])
+          .attr('fill', color(dOut.data.title))
+      })
+
+    return el.toReact();
+  },
+
+  componentDidMount: function() {
+    var we = this;
+    if (this.props.data) {
+      this.setState({pie: this.buildPie(this.props.data)});
+    } else if (this.props.query) {
+      this.props.query(function(results) {
+        we.setState({pie: we.buildPie(results)});
+      }.bind(this));
+    }
+  },
+  
+  render: function() {
+    return (
+      <div>{this.state.pie}</div>
+    )
+  }
+})
+
+
+
+
+
+
 
 /////////////////////////////////////////////////////////
 /////////////// DRUG RESPONSE
