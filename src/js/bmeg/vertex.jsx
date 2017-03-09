@@ -49,6 +49,15 @@ var queries = {
     });
   },
 
+  firstVertex: function(label) {
+    return function(callback) {
+      Ophion().query().label(label).limit(1).execute(function(result) {
+        console.log(result);
+        callback(result.result[0]);
+      });
+    }
+  },
+
   variantTypeCounts: function(gene) {
     return function(callback) {
       Ophion().query().has("gid", ["gene:" + gene]).incoming("affectsGene").outgoing("termFor").groupCount("variant").by("term").cap(["variant"]).execute(function(result) {
@@ -630,8 +639,11 @@ var VertexViewer = React.createClass({
 
   componentDidMount() {
     window.onpopstate = this.onPopState
-    if (this.state.input) {
-      this.setVertex(this.state.input, true)
+    var gid = this.props.input
+    if (gid) {
+    // if (this.state.input) {
+      this.setVertex(gid, true)
+      history.pushState({gid: gid}, "Vertex: " + gid, '?gid=' + gid)
     }
   },
 
@@ -889,6 +901,32 @@ class SchemaGraph extends Component {
 
 
 
+function urlParams() {
+  var params = {};
+  var match,
+      pl     = /\+/g,  // Regex for replacing addition symbol with a space
+      search = /([^&=]+)=?([^&]*)/g,
+      decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); },
+      query  = window.location.search.substring(1);
+
+  while (match = search.exec(query)) {
+    console.log("match found " + match[1] + "," + match[2])
+    params[decode(match[1])] = decode(match[2]);
+  }
+
+  return params;
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -910,13 +948,19 @@ class SchemaViewer extends Component {
     this.state = {
       schema: {},
       loaded: false,
+      gid: null,
       label: null
     }
 
     this.events = {
       tap: function(cy) {
-        console.log(this.id());
-        self.setState({label: this.id().toLowerCase()});
+        var label = this.id()
+        console.log(label);
+        var query = queries.firstVertex(label);
+        query(function(result) {
+          console.log(result)
+          self.setState({schema: self.state.schema, label: label.toLowerCase(), gid: result.properties.gid});
+        })
       }
     }
   }
@@ -924,23 +968,39 @@ class SchemaViewer extends Component {
   componentDidMount() {
     console.log('mounting')
 
-    var self = this;
-    queries.schema(function(schema) {
-      self.setState({schema: schema, loaded: true})
-      self.refs.schema.cytoscape().on('tap', 'node', self.events.tap);
-    });
+    var params = urlParams()
+    console.log(params)
+    if (_.isEmpty(params)) {
+      console.log('params is empty')
+      var self = this;
+      queries.schema(function(schema) {
+        self.setState({schema: schema, loaded: true})
+        self.refs.schema.cytoscape().on('tap', 'node', self.events.tap);
+      });
+    } else if (params['gid']) {
+      console.log('params has gid: ' + params['gid'])
+      this.setState({gid: params['gid']})
+    }
   }
 
   render() {
-    if (this.state.label) {
-      return <VertexViewer label={this.state.label} visualizations={generateVisualizations()} />
-
-    } else if (this.state.loaded) {
-      return <SchemaGraph ref="schema" width={this.props.width} height={this.props.height} schema={this.state.schema} />
-
-    } else {
-      return <div>loading....</div>
+    var elements = []
+    if (this.state.gid) {
+      var vertex = <VertexViewer key="vertex" label={this.state.label} input={this.state.gid} visualizations={generateVisualizations()} />
+      elements.push(vertex);
     }
+
+    if (this.state.loaded) {
+      var schema = <SchemaGraph key="schema" ref="schema" width={this.props.width} height={this.props.height} schema={this.state.schema} />
+      elements.push(schema)
+    } else {
+      elements.push(<div>loading....</div>)
+    }
+    return (
+      <div key="loading">
+        {elements}
+      </div>
+    )
   }
 }
 
