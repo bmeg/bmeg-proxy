@@ -482,9 +482,16 @@ var VertexEdges = React.createClass({
 });
 
 function PropertyRow(props) {
+  var value = props.value
+  if (_.isArray(value)) {
+    value = JSON.stringify(value)
+  } else if (_.isObject(value)) {
+    value = JSON.stringify(value)
+  }
+
   return (<tr>
     <td className="prop-key mdl-data-table__cell--non-numeric">{props.name}</td>
-    <td className="mdl-data-table__cell--non-numeric">{props.value}</td>
+    <td className="mdl-data-table__cell--non-numeric">{value}</td>
   </tr>)
 }
 
@@ -666,12 +673,12 @@ var VertexViewer = React.createClass({
       this.setState({input: gid, loading: true, error: ""});
       fetchVertex(gid, function(result) {
         if (Object.keys(result).length > 0) {
-          we.setState({vertex: result, loading: false, error: ""})
+          we.setState({input: gid, vertex: result, loading: false, error: ""})
           if (!nopushstate) {
             history.pushState({gid: gid}, "Vertex: " + gid, '?gid=' + gid);
           }
         } else {
-          we.setState({vertex: {}, loading: false, error: ""})
+          we.setState({input: gid, vertex: {}, loading: false, error: ""})
         }
       });
     }
@@ -988,16 +995,14 @@ class SchemaViewer extends Component {
     if (this.state.gid) {
       var vertex = <VertexViewer key="vertex" label={this.state.label} input={this.state.gid} visualizations={generateVisualizations()} />
       elements.push(vertex);
-    }
-
-    if (this.state.loaded) {
+    } else if (this.state.loaded) {
       var schema = <SchemaGraph key="schema" ref="schema" width={this.props.width} height={this.props.height} schema={this.state.schema} />
       elements.push(schema)
     } else {
-      elements.push(<div>loading....</div>)
+      elements.push(<div key="loading">loading....</div>)
     }
     return (
-      <div key="loading">
+      <div>
         {elements}
       </div>
     )
