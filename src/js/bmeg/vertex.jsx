@@ -137,7 +137,7 @@ function generateVisualizations() {
   }
 
   function drugResponse(vertex) {
-    return <DrugResponse cohort={vertex.properties.name} />
+    return <DrugResponse key="drug-response" cohort={vertex.properties.name} />
   }
 
   return {
@@ -363,11 +363,11 @@ class DrugResponse extends Component {
   extractResponses(responses) {
     return responses.map(function(mutant) {
       var response = JSON.parse(mutant)
-      var amax = response.filter(function(r) {return r['type'] === 'EC50'}) // 'AMAX'})
+      var amax = response.filter(function(r) {return r['type'] === 'AUC'}) // 'EC50'}) // 'AMAX'})
       if (!_.isEmpty(amax)) {
         return amax[0]['value']
       }
-    }).filter(function(x) {return x && x > -100 && x < 100});
+    })// .filter(function(x) {return x && x > -100 && x < 100});
   }
 
   setGene(gene) {
@@ -673,12 +673,13 @@ var VertexViewer = React.createClass({
       this.setState({input: gid, loading: true, error: ""});
       fetchVertex(gid, function(result) {
         if (Object.keys(result).length > 0) {
-          we.setState({input: gid, vertex: result, loading: false, error: ""})
+          // we.setState({input: gid, vertex: result, loading: false, error: ""})
+          we.setState({vertex: result, loading: false, error: ""})
           if (!nopushstate) {
             history.pushState({gid: gid}, "Vertex: " + gid, '?gid=' + gid);
           }
         } else {
-          we.setState({input: gid, vertex: {}, loading: false, error: ""})
+          we.setState({vertex: {}, loading: false, error: ""})
         }
       });
     }
