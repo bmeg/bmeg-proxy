@@ -115,7 +115,6 @@ var queries = {
   sampleResponses: function(samples, drug) {
     return function(callback) {
       Ophion().query().has("gid", ['compound:' + drug]).incoming("responseTo").mark('a').outgoing('responseOf').has("gid", samples).select(['a']).values(['responseSummary']).execute(function(result) {
-      // Ophion().query().has("gid", samples).incoming("responseOf").mark("a").outgoing("responseTo").has("gid", ['compound:' + drug]).select(["a"]).values(["gid", "responseSummary"]).execute(function(result) {
         console.log(result);
         callback(result.result);
       });
@@ -319,6 +318,7 @@ class DrugSelect extends Component {
 
       return (
           <div>
+            <label className="label-block">Then choose a drug</label>
             <select value={this.state.selected} onChange={this.selectDrug.bind(this)}>
               {drugOptions}
             </select>
@@ -701,6 +701,8 @@ var VertexViewer = React.createClass({
       emptyMessage = "No vertex found";
     }
 
+    var spacing = <div key="spacing" className="spacing"></div>
+
     var properties = <div className="empty-vertex">{emptyMessage}</div>;
     var visualizations = [];
 
@@ -708,7 +710,7 @@ var VertexViewer = React.createClass({
       properties = (<div><PropertiesView vertex={this.state.vertex} /><EdgesView vertex={this.state.vertex} navigate={this.setVertex} /></div>)
 
       if (this.props.visualizations) {
-        var label = this.state.vertex.properties.label || this.state.vertex.properties['#label'] || this.state.vertex.properties.type || extractLabel(this.state.vertex.properties.gid);
+        var label = this.state.vertex.type || this.state.vertex.properties.label || this.state.vertex.properties['#label'] || this.state.vertex.properties.type || extractLabel(this.state.vertex.properties.gid);
         console.log("label: " + label)
         if (this.props.visualizations[label]) {
           console.log("visualizations found: " + this.props.visualizations[label].length)
@@ -727,6 +729,7 @@ var VertexViewer = React.createClass({
         {loading}
         {visualizations}
         {error}
+        {spacing}
         {properties}
       </div>
     );
