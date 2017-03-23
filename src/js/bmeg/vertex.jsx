@@ -37,6 +37,26 @@ function classNames () {
   return classes.join(' ');
 }
 
+function addLists(a, b) {
+  var longest = a.length > b.length ? a : b
+  var shortest = a.length <= b.length ? a : b
+  return longest.map(function(item, i) {
+    return item + (shortest.length < i ? shortest[i] : 0.0)
+  })
+}
+
+function sampleAverage(responses) {
+  var inverse = 1.0 / responses.length
+  var line = responses.reduce(function(average, curve) {
+    // average.x = addLists(average.x, curve.x)
+    average.y = addLists(average.y, curve.y)
+    return average
+  }, {x: responses[0].x, y: []})
+
+  // line.y = line.y.map(function(m) {return m * inverse})
+  return line
+}
+
 var PubmedLink = function(props) {
   var url = "https://www.ncbi.nlm.nih.gov/pubmed/" + props.id;
   return (<div><a href={url} target="_blank">{url}</a></div>)
@@ -382,7 +402,7 @@ class DrugResponse extends Component {
 
     var summary = rawSummary.map(function(mutant) {
       var response = JSON.parse(mutant)
-      var amax = response.filter(function(r) {return r['type'] === 'AUC'}) // 'EC50'}) // 'AMAX'})
+      var amax = response.filter(function(r) {return r['type'] === 'EC50'}) // 'AUC'}) // 'EC50'}) // 'AMAX'})
       if (!_.isEmpty(amax)) {
         return amax[0]['value']
       }
@@ -390,13 +410,15 @@ class DrugResponse extends Component {
 
     console.log('values')
     console.log(rawValues[0])
-    // var values = rawValues.map(function(mutant) {
-    //   var response = JSON.parse(mutant)
-    //   var amax = response.filter(function(r) {return r['type'] === 'AUC'}) // 'EC50'}) // 'AMAX'})
-    //   if (!_.isEmpty(amax)) {
-    //     return amax[0]['value']
-    //   }
-    // })// .filter(function(x) {return x && x > -100 && x < 100});
+
+    var values = rawValues.map(function(mutant) {
+      var response = JSON.parse(mutant)
+      return response.reduce(function(dimensions, point) {
+        dimensions.x.push(point.dose)
+        dimensions.y.push(point.response)
+        return dimensions
+      }, {x: [], y: []})
+    }) // .filter(function(x) {return x && x > -100 && x < 100});
 
     return {
       summary: summary,
@@ -431,10 +453,37 @@ class DrugResponse extends Component {
                 console.log(mutantResponses)
                 console.log(normalResponses)
                 self.setState({mutantResponses: mutantResponses, normalResponses: normalResponses})
+
                 Plotly.newPlot(
                   'response-plot',
-                  [{name: 'mutation samples', y: mutantResponses, type: 'box'},
-                   {name: 'normal samples', y: normalResponses, type: 'box'}])
+                  [{name: 'mutation samples', y: mutantResponses.summary, type: 'box'},
+                   {name: 'normal samples', y: normalResponses.summary, type: 'box'}]
+                )
+
+                var normalAverage = sampleAverage(normalResponses.values)
+                normalAverage.mode = 'line'
+                normalAverage.name = 'Normals'
+                var mutantAverage = sampleAverage(mutantResponses.values)
+                mutantAverage.mode = 'line'
+                mutantAverage.name = 'Mutations'
+
+                // var normalCurves = normalResponses.values.map(function(curve) {
+                //   curve.name = "Normal"
+                //   curve.mode = "lines"
+                //   return curve
+                // })
+
+                // var mutantCurves = mutantResponses.values.map(function(curve) {
+                //   curve.name = "Mutation"
+                //   curve.mode = "lines"
+                //   return curve
+                // })
+
+                Plotly.newPlot(
+                  'curves-plot',
+                  [normalAverage, mutantAverage]
+                  // mutantCurves.concat(normalCurves)
+                )
               })
             })
           }
@@ -452,6 +501,7 @@ class DrugResponse extends Component {
         <GeneInput value={this.state.input} onChange={this.setGene.bind(this)} />
         <DrugSelect ref="drugselect" cohort={this.props.cohort} selectDrug={this.selectDrug.bind(this)} />
         <div id="response-plot"></div>
+        <div id="curves-plot"></div>
         </div>
     )
   }
