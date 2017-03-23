@@ -251,14 +251,30 @@ var PieChart = React.createClass({
 
 
 
+function mdlCleanUp() {
+  var mdlInputs = document.getElementsByClassName('mdl-js-textfield')
+  console.log(mdlInputs)
+  for (var i = 0, l = mdlInputs.length; i < l; i++) {
+    var mdl = mdlInputs[i]
+    if (mdl.MaterialTextfield) {
+      mdl.MaterialTextfield.checkDirty();
+    }
+  }
+}
 
 /////////////////////////////////////////////////////////
 /////////////// DRUG RESPONSE
 ////////////////////////////////////////////////
 
 class GeneInput extends Component {
-  componentDidMount() {
-    componentHandler.upgradeElement(this.refs.mdlWrapper)
+  componentDidMount(){
+    // mdlCleanUp()
+    componentHandler.upgradeElement(this.refs.mdlWrapper);
+  }
+
+  componentDidUpdate(){
+    // mdlCleanUp()
+    componentHandler.upgradeElement(this.refs.mdlWrapper);
   }
 
   render() {
@@ -431,8 +447,8 @@ class DrugResponse extends Component {
 
   render() {
     return (
-        <div>
-        <span className="informative-header">Visualize drug responses for samples containing a mutation in the given gene</span>
+      <div>
+        <span className="informative-header">Drug response for samples with a given mutation vs those without that mutation</span>
         <GeneInput value={this.state.input} onChange={this.setGene.bind(this)} />
         <DrugSelect ref="drugselect" cohort={this.props.cohort} selectDrug={this.selectDrug.bind(this)} />
         <div id="response-plot"></div>
@@ -578,7 +594,14 @@ var EdgesView = function(props) {
 var VertexInput = React.createClass({
   componentDidMount() {
     componentHandler.upgradeElement(this.refs.mdlWrapper)
+    mdlCleanUp()
   },
+
+  componentDidUpdate() {
+    componentHandler.upgradeElement(this.refs.mdlWrapper)
+    mdlCleanUp()
+  },
+
   render() {
     return <div
     className="mdl-textfield mdl-js-textfield mdl-textfield--floating-label"
@@ -1021,7 +1044,7 @@ class SchemaViewer extends Component {
       var schema = <SchemaGraph key="schema" ref="schema" width={this.props.width} height={this.props.height} schema={this.state.schema} />
           elements.push(schema)
     } else {
-      elements.push(<div key="loading">loading....</div>)
+      elements.push(<div key="loading"><img src='/static/ripple.gif' /></div>)
     }
     return (
         <div>
