@@ -13,28 +13,28 @@ import {Ophion} from 'ophion';
 var hasOwn = {}.hasOwnProperty;
 
 function classNames () {
-	var classes = [];
+  var classes = [];
 
-	for (var i = 0; i < arguments.length; i++) {
-		var arg = arguments[i];
-		if (!arg) continue;
+  for (var i = 0; i < arguments.length; i++) {
+	var arg = arguments[i];
+	if (!arg) continue;
 
-		var argType = typeof arg;
+	var argType = typeof arg;
 
-		if (argType === 'string' || argType === 'number') {
-			classes.push(arg);
-		} else if (Array.isArray(arg)) {
-			classes.push(classNames.apply(null, arg));
-		} else if (argType === 'object') {
-			for (var key in arg) {
-				if (hasOwn.call(arg, key) && arg[key]) {
-					classes.push(key);
-				}
-			}
+	if (argType === 'string' || argType === 'number') {
+	  classes.push(arg);
+	} else if (Array.isArray(arg)) {
+	  classes.push(classNames.apply(null, arg));
+	} else if (argType === 'object') {
+	  for (var key in arg) {
+		if (hasOwn.call(arg, key) && arg[key]) {
+		  classes.push(key);
 		}
+	  }
 	}
+  }
 
-	return classes.join(' ');
+  return classes.join(' ');
 }
 
 var PubmedLink = function(props) {
@@ -86,7 +86,7 @@ var queries = {
   cohortCompounds: function(cohort) {
     return function(callback) {
       Ophion().query().has("gid", ["type:Compound"]).outgoing("hasInstance").values(["gid"]).execute(function(result) {
-      // Ophion().query().has("gid", ["cohort:" + cohort]).outgoing("hasMember").incoming("responseOf").outgoing("responseTo").dedup().values(["gid"]).execute(function(result) {
+        // Ophion().query().has("gid", ["cohort:" + cohort]).outgoing("hasMember").incoming("responseOf").outgoing("responseTo").dedup().values(["gid"]).execute(function(result) {
         
         console.log(result);
         callback(result.result);
@@ -114,7 +114,7 @@ var queries = {
 
   sampleResponses: function(samples, drug) {
     return function(callback) {
-      Ophion().query().has("gid", ['compound:' + drug]).incoming("responseTo").mark('a').outgoing('responseOf').has("gid", samples).select(['a']).values(['responseSummary']).execute(function(result) {
+      Ophion().query().has("gid", ['compound:' + drug]).incoming("responseTo").mark('a').outgoing('responseOf').has("gid", samples).select(['a']).values(['responseSummary', 'responseValues']).execute(function(result) {
         console.log(result);
         callback(result.result);
       });
@@ -170,7 +170,7 @@ var keyify = function(s) {
 var PieChart = React.createClass({
   getInitialState: function() {
     var pie = <div><img src='/static/ripple.gif' /></div>
-    return {pie: pie}
+        return {pie: pie}
   },
   
   buildPie: function(data) {
@@ -241,7 +241,7 @@ var PieChart = React.createClass({
   
   render: function() {
     return (
-      <div>{this.state.pie}</div>
+        <div>{this.state.pie}</div>
     )
   }
 })
@@ -263,22 +263,22 @@ class GeneInput extends Component {
 
   render() {
     return <div
-      className="mdl-textfield mdl-js-textfield mdl-textfield--floating-label"
-      ref="mdlWrapper"
-    >
+    className="mdl-textfield mdl-js-textfield mdl-textfield--floating-label"
+    ref="mdlWrapper"
+      >
       <label
-        className="mdl-textfield__label"
-        htmlFor="vertex-gid-input"
+    className="mdl-textfield__label"
+    htmlFor="vertex-gid-input"
       >Enter a gene name</label>
       <input
-        id="gene-response-input"
-        type="text"
-        name="gene"
-        className="mdl-textfield__input"
-        onChange={e => this.props.onChange(e.target.value)}
-        value={this.props.value}
+    id="gene-response-input"
+    type="text"
+    name="gene"
+    className="mdl-textfield__input"
+    onChange={e => this.props.onChange(e.target.value)}
+    value={this.props.value}
       />
-    </div>
+      </div>
   }
 }
 
@@ -318,10 +318,10 @@ class DrugSelect extends Component {
 
       return (
           <div>
-            <label className="label-block">Then choose a drug</label>
-            <select value={this.state.selected} onChange={this.selectDrug.bind(this)}>
-              {drugOptions}
-            </select>
+          <label className="label-block">Then choose a drug</label>
+          <select value={this.state.selected} onChange={this.selectDrug.bind(this)}>
+          {drugOptions}
+        </select>
           </div>
       )
     } else {
@@ -361,13 +361,31 @@ class DrugResponse extends Component {
   }
 
   extractResponses(responses) {
-    return responses.map(function(mutant) {
+    var rawSummary = responses.filter(function(x, i) {return (i % 2) === 0});
+    var rawValues = responses.filter(function(x, i) {return (i % 2) === 1});
+
+    var summary = rawSummary.map(function(mutant) {
       var response = JSON.parse(mutant)
       var amax = response.filter(function(r) {return r['type'] === 'AUC'}) // 'EC50'}) // 'AMAX'})
       if (!_.isEmpty(amax)) {
         return amax[0]['value']
       }
     })// .filter(function(x) {return x && x > -100 && x < 100});
+
+    console.log('values')
+    console.log(rawValues[0])
+    // var values = rawValues.map(function(mutant) {
+    //   var response = JSON.parse(mutant)
+    //   var amax = response.filter(function(r) {return r['type'] === 'AUC'}) // 'EC50'}) // 'AMAX'})
+    //   if (!_.isEmpty(amax)) {
+    //     return amax[0]['value']
+    //   }
+    // })// .filter(function(x) {return x && x > -100 && x < 100});
+
+    return {
+      summary: summary,
+      values: values
+    }
   }
 
   setGene(gene) {
@@ -413,12 +431,12 @@ class DrugResponse extends Component {
 
   render() {
     return (
-      <div>
+        <div>
         <span className="informative-header">Visualize drug responses for samples containing a mutation in the given gene</span>
         <GeneInput value={this.state.input} onChange={this.setGene.bind(this)} />
         <DrugSelect ref="drugselect" cohort={this.props.cohort} selectDrug={this.selectDrug.bind(this)} />
         <div id="response-plot"></div>
-      </div>
+        </div>
     )
   }
 }
@@ -455,7 +473,7 @@ function getParameterByName(name, url) {
   }
   name = name.replace(/[\[\]]/g, "\\$&");
   var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-  results = regex.exec(url);
+      results = regex.exec(url);
   if (!results) return null;
   if (!results[2]) return '';
   return decodeURIComponent(results[2].replace(/\+/g, " "));
@@ -472,9 +490,9 @@ var VertexEdges = React.createClass({
     var header = <span>{props.label + ' '}<span className="edge-direction">({props.direction} {prefix})</span></span>
 
     var items = props.edges.map(gid => (
-      <ExpandoItem key={gid}>
+        <ExpandoItem key={gid}>
         <a onClick={() => props.navigate(gid)}>{snipPrefix(gid)}</a>
-      </ExpandoItem>
+        </ExpandoItem>
     ));
 
     return <Expando header={header}>{items}</Expando>;
@@ -490,9 +508,9 @@ function PropertyRow(props) {
   }
 
   return (<tr>
-    <td className="prop-key mdl-data-table__cell--non-numeric">{props.name}</td>
-    <td className="mdl-data-table__cell--non-numeric">{value}</td>
-  </tr>)
+          <td className="prop-key mdl-data-table__cell--non-numeric">{props.name}</td>
+          <td className="mdl-data-table__cell--non-numeric">{value}</td>
+          </tr>)
 }
 
 var PropertiesView = function(props) {
@@ -502,15 +520,15 @@ var PropertiesView = function(props) {
   });
 
   return (
-    <div>
+      <div>
       <div className="vertex-properties">
-        <table
-          className="prop-table mdl-data-table mdl-js-data-table mdl-data-table--selectable mdl-shad--2dp"
-        ><tbody>
-          {properties}
-        </tbody></table>
+      <table
+    className="prop-table mdl-data-table mdl-js-data-table mdl-data-table--selectable mdl-shad--2dp"
+      ><tbody>
+      {properties}
+    </tbody></table>
       </div>
-    </div>
+      </div>
   )
 }
 
@@ -518,42 +536,42 @@ var EdgesView = function(props) {
   console.log(props)
   var inEdges = Object.keys(props.vertex['in'])
   // Filter out edges with "hasInstance" in label
-  .filter(key => key != 'hasInstance')
-  .map(function(key) {
-    return <VertexEdges
-      key={key}
-      label={key}
-      navigate={props.navigate}
-      edges={props.vertex['in'][key]}
-      direction="from"
-    />
-  });
-   var outEdges = Object.keys(props.vertex['out'])
+      .filter(key => key != 'hasInstance')
+      .map(function(key) {
+        return <VertexEdges
+        key={key}
+        label={key}
+        navigate={props.navigate}
+        edges={props.vertex['in'][key]}
+        direction="from"
+          />
+      });
+  var outEdges = Object.keys(props.vertex['out'])
   // Filter out edges with "hasInstance" in label
-  .filter(key => key != 'hasInstance')
-  .map(function(key) {
-    return <VertexEdges
-      key={key}
-      label={key}
-      navigate={props.navigate}
-      edges={props.vertex['out'][key]}
-      direction="to"
-    />
-  });
+      .filter(key => key != 'hasInstance')
+      .map(function(key) {
+        return <VertexEdges
+        key={key}
+        label={key}
+        navigate={props.navigate}
+        edges={props.vertex['out'][key]}
+        direction="to"
+          />
+      });
 
   return (
-    <div>
+      <div>
       <div className="vertex-edges-wrapper">
-        <div className="vertex-in-edges vertex-edges">
-          <h4>In Edges</h4>
-          {inEdges}
-        </div>
-        <div className="vertex-out-edges vertex-edges">
-          <h4>Out Edges</h4>
-          {outEdges}
-        </div>
-      </div>
+      <div className="vertex-in-edges vertex-edges">
+      <h4>In Edges</h4>
+      {inEdges}
     </div>
+      <div className="vertex-out-edges vertex-edges">
+      <h4>Out Edges</h4>
+      {outEdges}
+    </div>
+      </div>
+      </div>
   )
 }
 
@@ -563,22 +581,22 @@ var VertexInput = React.createClass({
   },
   render() {
     return <div
-      className="mdl-textfield mdl-js-textfield mdl-textfield--floating-label"
-      ref="mdlWrapper"
-    >
+    className="mdl-textfield mdl-js-textfield mdl-textfield--floating-label"
+    ref="mdlWrapper"
+      >
       <label
-        className="mdl-textfield__label"
-        htmlFor="vertex-gid-input"
+    className="mdl-textfield__label"
+    htmlFor="vertex-gid-input"
       >Enter a vertex GID</label>
       <input
-        id="vertex-gid-input"
-        type="text"
-        name="gid"
-        className="mdl-textfield__input"
-        onChange={e => this.props.onChange(e.target.value)}
-        value={this.props.value}
+    id="vertex-gid-input"
+    type="text"
+    name="gid"
+    className="mdl-textfield__input"
+    onChange={e => this.props.onChange(e.target.value)}
+    value={this.props.value}
       />
-    </div>
+      </div>
   },
 })
 
@@ -604,16 +622,16 @@ var Expando = React.createClass({
     })
     
     return (<div className={rootClassName}>
-      <a className="mdl-navigation__link mdl-collapse__button expando-header" onClick={this.onClick}>
-        <i className="material-icons mdl-collapse__icon mdl-animation--default">expand_more</i>
-        {props.header}
-      </a>
-      <div className="mdl-collapse__content-wrapper expando-content">
-        <div className="mdl-collapse__content mdl-animation--default" ref="content">
-          {props.children}
-        </div>
-      </div>
-    </div>)
+            <a className="mdl-navigation__link mdl-collapse__button expando-header" onClick={this.onClick}>
+            <i className="material-icons mdl-collapse__icon mdl-animation--default">expand_more</i>
+            {props.header}
+            </a>
+            <div className="mdl-collapse__content-wrapper expando-content">
+            <div className="mdl-collapse__content mdl-animation--default" ref="content">
+            {props.children}
+            </div>
+            </div>
+            </div>)
   }
 })
 
@@ -648,7 +666,7 @@ var VertexViewer = React.createClass({
     window.onpopstate = this.onPopState
     var gid = this.props.input
     if (gid) {
-    // if (this.state.input) {
+      // if (this.state.input) {
       this.setVertex(gid, true)
       history.pushState({gid: gid}, "Vertex: " + gid, '?gid=' + gid)
     }
@@ -725,13 +743,13 @@ var VertexViewer = React.createClass({
     console.log("generated: " + visualizations.length);
 
     return (
-      <div>
+        <div>
         <VertexInput onChange={this.setVertex} value={this.state.input} />
         {loading}
-        {visualizations}
-        {error}
-        {spacing}
-        {properties}
+      {visualizations}
+      {error}
+      {spacing}
+      {properties}
       </div>
     );
   }
@@ -900,9 +918,9 @@ class SchemaGraph extends Component {
     }
 
     return(
-      <div>
+        <div>
         <div id="cy" style={containerStyle} ref="cytoscape" />
-      </div>
+        </div>
     )
   }
 }
@@ -998,15 +1016,15 @@ class SchemaViewer extends Component {
     var elements = []
     if (this.state.gid) {
       var vertex = <VertexViewer key="vertex" label={this.state.label} input={this.state.gid} visualizations={generateVisualizations()} />
-      elements.push(vertex);
+          elements.push(vertex);
     } else if (this.state.loaded) {
       var schema = <SchemaGraph key="schema" ref="schema" width={this.props.width} height={this.props.height} schema={this.state.schema} />
-      elements.push(schema)
+          elements.push(schema)
     } else {
       elements.push(<div key="loading">loading....</div>)
     }
     return (
-      <div>
+        <div>
         {elements}
       </div>
     )
