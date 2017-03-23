@@ -5,7 +5,7 @@ var BUILD_DIR = path.resolve(__dirname, 'static/js');
 var APP_DIR = path.resolve(__dirname, 'src/js/bmeg');
 
 var config = {
-  entry: APP_DIR + '/vertex.jsx',
+  entry: ['whatwg-fetch', APP_DIR + '/vertex.jsx'],
   devtool: 'source-map',
   output: {
     path: BUILD_DIR,
