@@ -1085,14 +1085,11 @@ export var use_case_2 = {};
 
     uc2.containerElemId = 'use_case_2_div';
 
-    var uc2_viewer = React.createClass({
-        render: function() {
-            console.log("in uc2_viewer.render");
-            var testing = <p>Here's some text in a p tag.</p>
-
-            return (
-                <div>{testing}</div>
-            )
+    var HelloComponent = React.createClass({
+        render() {
+            var helloP = <p>Here's a hello message in a p tag.</p>
+            var helloDiv = <div>{helloP}</div>
+            return (helloDiv)
         }
     })
 
@@ -1102,7 +1099,7 @@ export var use_case_2 = {};
         var containerElem = document.getElementById(containerElemId);
         console.log(containerElem);
         render(
-            <uc2_viewer/>, containerElem);
+            <HelloComponent/>, containerElem);
     }
 })(use_case_2)
 
