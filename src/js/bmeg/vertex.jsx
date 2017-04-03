@@ -1095,15 +1095,22 @@ export var use_case_2 = {};
 
     var ThrobberComponent = React.createClass({
         render() {
-            var loading = <img src="/static/ripple.gif" width="50px"/>
+            var loading = <img src="/static/ripple.gif" width="50px" alt="ripple.gif" title="loading"/>
             return (loading)
         }
     })
 
     var GeneInputTextBoxComponent = React.createClass({
         render() {
-            var textBoxTag = " "
+            var textBoxTag = <input id="geneSymbolTextBox" type="text" title="specify a HUGO symbol for a gene" placeholder="HUGO symbol" size="30"/>
             return (textBoxTag)
+        }
+    })
+
+    var SubmitGeneButtonComponent = React.createClass({
+        render() {
+            var buttonTag = <button id="submit_gene" title="submit the HUGO symbol">Submit the gene!</button>
+            return (buttonTag)
         }
     })
 
@@ -1114,8 +1121,10 @@ export var use_case_2 = {};
         if (loading) {
             throbber = <ThrobberComponent/>
         }
+        var geneTextBox = <GeneInputTextBoxComponent/>
+        var submitGeneButton = <SubmitGeneButtonComponent/>
         return (
-            <div>{hello}<hr/>{throbber}</div>
+            <div>{hello}<hr/>{geneTextBox} {throbber}<br/>{submitGeneButton}</div>
         )
     }
 
