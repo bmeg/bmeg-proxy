@@ -1093,13 +1093,41 @@ export var use_case_2 = {};
         }
     })
 
+    var ThrobberComponent = React.createClass({
+        render() {
+            var loading = <img src="/static/ripple.gif" width="50px"/>
+            return (loading)
+        }
+    })
+
+    var GeneInputTextBoxComponent = React.createClass({
+        render() {
+            var textBoxTag = " "
+            return (textBoxTag)
+        }
+    })
+
+    // collect components into a single element that can be used with render
+    var use_case_2_components = function(loading = false) {
+        var hello = <HelloComponent/>
+        var throbber = " "
+        if (loading) {
+            throbber = <ThrobberComponent/>
+        }
+        return (
+            <div>{hello}<hr/>{throbber}</div>
+        )
+    }
+
     uc2.initialize = function() {
         console.log("uc2.initialize() in use_case_2.jsx");
         var containerElemId = uc2.containerElemId;
         var containerElem = document.getElementById(containerElemId);
         console.log(containerElem);
+        var loading = true
+        var components = use_case_2_components(loading = loading)
         render(
-            <HelloComponent/>, containerElem);
+            <div>{components}</div>, containerElem);
     }
 })(use_case_2)
 
