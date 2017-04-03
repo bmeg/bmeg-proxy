@@ -1085,6 +1085,39 @@ export var use_case_2 = {};
 
     uc2.containerElemId = 'use_case_2_div';
 
+    /*
+ ██████   █████  ██  █████       ██████  ██    ██ ███████ ██████  ██    ██
+██       ██   ██ ██ ██   ██     ██    ██ ██    ██ ██      ██   ██  ██  ██
+██   ███ ███████ ██ ███████     ██    ██ ██    ██ █████   ██████    ████
+██    ██ ██   ██ ██ ██   ██     ██ ▄▄ ██ ██    ██ ██      ██   ██    ██
+ ██████  ██   ██ ██ ██   ██      ██████   ██████  ███████ ██   ██    ██
+                                    ▀▀
+*/
+
+    // query_sigs_for_mutations in meteor_methods.js
+    // https://davidwalsh.name/fetch
+    // use POST. The same endpoint should handle very large gene sets.
+    function querySigsForMutation(geneId, callback) {
+        var request = new Request('/gaea/signature/mutation', {
+            method: 'POST',
+            mode: 'cors',
+            redirect: 'follow',
+            headers: new Headers({'Content-Type': 'text/plain'}),
+            body: JSON.stringify([geneId])
+        });
+        fetch(request).then(function(response) {
+            return response.json()
+        }).then(callback)
+    }
+
+    /*
+ ██████  ██████  ███    ███ ██████   ██████  ███    ██ ███████ ███    ██ ████████ ███████
+██      ██    ██ ████  ████ ██   ██ ██    ██ ████   ██ ██      ████   ██    ██    ██
+██      ██    ██ ██ ████ ██ ██████  ██    ██ ██ ██  ██ █████   ██ ██  ██    ██    ███████
+██      ██    ██ ██  ██  ██ ██      ██    ██ ██  ██ ██ ██      ██  ██ ██    ██         ██
+ ██████  ██████  ██      ██ ██       ██████  ██   ████ ███████ ██   ████    ██    ███████
+*/
+
     var HelloComponent = React.createClass({
         render() {
             var helloP = <p>Here's a hello message in a p tag.</p>
@@ -1101,9 +1134,20 @@ export var use_case_2 = {};
     })
 
     var GeneInputTextBoxComponent = React.createClass({
+        getInitialState() {
+            return {inputValue: ""};
+        },
         render() {
-            var textBoxTag = <input id="geneSymbolTextBox" type="text" title="specify a HUGO symbol for a gene" placeholder="HUGO symbol" size="30"/>
+            var textBoxTag = <input value={this.state.inputValue} onChange={this.updateInputValue} id="geneSymbolTextBox" type="text" title="specify a HUGO symbol for a gene" placeholder="HUGO symbol" size="30"/>
             return (textBoxTag)
+        },
+        updateInputValue(evt) {
+            this.setState({inputValue: evt.target.value});
+            var queryGene = this.state.inputValue;
+            console.log("queryGene: " + queryGene);
+            querySigsForMutation(queryGene, function(response) {
+                console.log("response: " + JSON.stringify(response));
+            });
         }
     })
 
@@ -1127,6 +1171,14 @@ export var use_case_2 = {};
             <div>{hello}<hr/>{geneTextBox} {throbber}<br/>{submitGeneButton}</div>
         )
     }
+
+    /*
+██ ███    ██ ██ ████████ ██  █████  ██      ██ ███████ ███████
+██ ████   ██ ██    ██    ██ ██   ██ ██      ██    ███  ██
+██ ██ ██  ██ ██    ██    ██ ███████ ██      ██   ███   █████
+██ ██  ██ ██ ██    ██    ██ ██   ██ ██      ██  ███    ██
+██ ██   ████ ██    ██    ██ ██   ██ ███████ ██ ███████ ███████
+*/
 
     uc2.initialize = function() {
         console.log("uc2.initialize() in use_case_2.jsx");
