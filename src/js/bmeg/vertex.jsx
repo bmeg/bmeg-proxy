@@ -1086,31 +1086,6 @@ export var use_case_2 = {};
     uc2.containerElemId = 'use_case_2_div';
 
     /*
- ██████   █████  ██  █████       ██████  ██    ██ ███████ ██████  ██    ██
-██       ██   ██ ██ ██   ██     ██    ██ ██    ██ ██      ██   ██  ██  ██
-██   ███ ███████ ██ ███████     ██    ██ ██    ██ █████   ██████    ████
-██    ██ ██   ██ ██ ██   ██     ██ ▄▄ ██ ██    ██ ██      ██   ██    ██
- ██████  ██   ██ ██ ██   ██      ██████   ██████  ███████ ██   ██    ██
-                                    ▀▀
-*/
-
-    // query_sigs_for_mutations in meteor_methods.js
-    // https://davidwalsh.name/fetch
-    // use POST. The same endpoint should handle very large gene sets.
-    function querySigsForMutation(geneId, callback) {
-        var request = new Request('/gaea/signature/mutation', {
-            method: 'POST',
-            mode: 'cors',
-            redirect: 'follow',
-            headers: new Headers({'Content-Type': 'text/plain'}),
-            body: JSON.stringify([geneId])
-        });
-        fetch(request).then(function(response) {
-            return response.json()
-        }).then(callback)
-    }
-
-    /*
  ██████  ██████  ███    ███ ██████   ██████  ███    ██ ███████ ███    ██ ████████ ███████
 ██      ██    ██ ████  ████ ██   ██ ██    ██ ████   ██ ██      ████   ██    ██    ██
 ██      ██    ██ ██ ████ ██ ██████  ██    ██ ██ ██  ██ █████   ██ ██  ██    ██    ███████
@@ -1118,57 +1093,87 @@ export var use_case_2 = {};
  ██████  ██████  ██      ██ ██       ██████  ██   ████ ███████ ██   ████    ██    ███████
 */
 
-    var HelloComponent = React.createClass({
-        render() {
-            var helloP = <p>Here's a hello message in a p tag.</p>
-            var helloDiv = <div>{helloP}</div>
-            return (helloDiv)
-        }
-    })
-
     var ThrobberComponent = React.createClass({
         render() {
-            var loading = <img src="/static/ripple.gif" width="50px" alt="ripple.gif" title="loading"/>
+            var loading;
+            if (this.props.loading) {
+                loading = <img id="throbber_img" src="/static/ripple.gif" width="50px" alt="ripple.gif" title="loading"/>
+            } else {
+                loading = <span></span>
+            }
             return (loading)
         }
     })
 
-    var GeneInputTextBoxComponent = React.createClass({
+    // http://blog.revathskumar.com/2015/07/submit-a-form-with-react.html
+    var SubmitGeneFormComponent = React.createClass({
         getInitialState() {
-            return {inputValue: ""};
+            return {inputValue: "", loading: false, errors: {}}
         },
-        render() {
-            var textBoxTag = <input value={this.state.inputValue} onChange={this.updateInputValue} id="geneSymbolTextBox" type="text" title="specify a HUGO symbol for a gene" placeholder="HUGO symbol" size="30"/>
-            return (textBoxTag)
+        _onChange: function(e) {
+            var state = {};
+            state[e.target.name] = e.target.value.toUpperCase();
+            this.setState(state);
+            // console.log("state change: " + JSON.stringify(state));
         },
-        updateInputValue(evt) {
-            this.setState({inputValue: evt.target.value});
-            var queryGene = this.state.inputValue;
-            console.log("queryGene: " + queryGene);
-            querySigsForMutation(queryGene, function(response) {
-                console.log("response: " + JSON.stringify(response));
-            });
-        }
-    })
+        validateInput: function(input) {
+            var isValid = true;
+            return isValid;
+        },
+        fetchCallback: function(response) {
+            console.log(JSON.stringify(response));
+            this.setState({loading: false});
+        },
+        fetchErrorHandler: function(err) {
+            console.log('Fetch Error :-S', err);
+            document.getElementById("submit_gene_button").setAttribute("disabled", false);
+        },
+        handleClick: function(e) {
+            e.preventDefault;
 
-    var SubmitGeneButtonComponent = React.createClass({
+            this.setState({loading: true});
+
+            var isValid = this.validateInput(this.state.inputValue);
+            if (isValid) {
+                // valid input
+            } else {
+                alert("invalid input");
+                return null;
+            }
+
+            var geneId = this.state.inputValue;
+            console.log("query GAIA with geneId: " + geneId);
+
+            // query gaia server
+            // https://davidwalsh.name/fetch
+            var request = new Request('/gaea/signature/mutation', {
+                method: 'POST',
+                mode: 'cors',
+                redirect: 'follow',
+                headers: new Headers({'Content-Type': 'text/plain'}),
+                body: JSON.stringify([geneId])
+            });
+
+            fetch(request).then(function(response) {
+                return response.json()
+            }).then(this.fetchCallback).catch(this.fetchErrorHandler);
+        },
         render() {
-            var buttonTag = <button id="submit_gene" title="submit the HUGO symbol">Submit the gene!</button>
-            return (buttonTag)
+            var textBox = <input name="inputValue" value={this.state.inputValue} onChange={this._onChange} id="geneSymbolTextBox" type="text" title="specify a HUGO symbol for a gene" placeholder="HUGO symbol" size="30"/>
+            var button = <button type="submit" onClick={this.handleClick} disabled={this.state.loading} id="submit_gene_button" title="submit the HUGO symbol">Submit the gene!</button>
+            var component = <div id="SubmitGeneFormComponent">
+                {textBox}{button}<ThrobberComponent loading={this.state.loading}/>
+            </div>;
+
+            return (component)
         }
     })
 
     // collect components into a single element that can be used with render
-    var use_case_2_components = function(loading = false) {
-        var hello = <HelloComponent/>
-        var throbber = " "
-        if (loading) {
-            throbber = <ThrobberComponent/>
-        }
-        var geneTextBox = <GeneInputTextBoxComponent/>
-        var submitGeneButton = <SubmitGeneButtonComponent/>
+    var use_case_2_components = function() {
+        var geneForm = <SubmitGeneFormComponent/>
         return (
-            <div>{hello}<hr/>{geneTextBox} {throbber}<br/>{submitGeneButton}</div>
+            <div>{geneForm}</div>
         )
     }
 
@@ -1185,8 +1190,7 @@ export var use_case_2 = {};
         var containerElemId = uc2.containerElemId;
         var containerElem = document.getElementById(containerElemId);
         console.log(containerElem);
-        var loading = true
-        var components = use_case_2_components(loading = loading)
+        var components = use_case_2_components()
         render(
             <div>{components}</div>, containerElem);
     }
