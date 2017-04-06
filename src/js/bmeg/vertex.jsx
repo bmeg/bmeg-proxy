@@ -339,7 +339,7 @@ class DrugSelect extends Component {
     console.log(this.props)
     var self = this
     this.fetchCompounds(function(drugs) {
-      var plain = drugs.map(function(drug) {return drug.slice(9)})
+      var plain = drugs.map(function(drug) {return drug.slice(9)}).sort()
       console.log(plain)
       self.setState({drugs: plain, loaded: true, selected: plain[0]})
       self.props.selectDrug(plain[0])
