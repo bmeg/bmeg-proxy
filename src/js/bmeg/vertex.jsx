@@ -19,6 +19,11 @@ import 'whatwg-fetch'
 // I couldn't get the use_case_2 object to load correctly from a separate file, so now I try appending use_case_2 scripts here.
 // I try to keep the use_case_2 parts from contaminating the pre-existing vertex.jsx parts.
 
+// additional libraries for use_case_2
+const $ = require('jquery');
+$.DataTable = require('datatables.net');
+const Highcharts = require('highcharts');
+
 var hasOwn = {}.hasOwnProperty
 
 function classNames() {
@@ -1086,6 +1091,23 @@ export var use_case_2 = {};
     uc2.containerElemId = 'use_case_2_div';
 
     /*
+██████   █████  ████████  █████      ████████  █████  ██████  ██      ███████
+██   ██ ██   ██    ██    ██   ██        ██    ██   ██ ██   ██ ██      ██
+██   ██ ███████    ██    ███████        ██    ███████ ██████  ██      █████
+██   ██ ██   ██    ██    ██   ██        ██    ██   ██ ██   ██ ██      ██
+██████  ██   ██    ██    ██   ██        ██    ██   ██ ██████  ███████ ███████
+*/
+
+    function DrawSignaturesDataTable(tableDataJson) {
+        console.log("DrawSignaturesDataTable");
+        // console.log(JSON.stringify(response, null, '\t'));
+        // TODO: create unattached div
+        // TODO: put data table in unattached div
+        // TODO: return parent div of data table
+        return null;
+    }
+
+    /*
  ██████  ██████  ███    ███ ██████   ██████  ███    ██ ███████ ███    ██ ████████ ███████
 ██      ██    ██ ████  ████ ██   ██ ██    ██ ████   ██ ██      ████   ██    ██    ██
 ██      ██    ██ ██ ████ ██ ██████  ██    ██ ██ ██  ██ █████   ██ ██  ██    ██    ███████
@@ -1120,8 +1142,9 @@ export var use_case_2 = {};
             var isValid = true;
             return isValid;
         },
-        fetchCallback: function(response) {
-            console.log(JSON.stringify(response));
+        fetchCallback: function(responseJson) {
+            // console.log(JSON.stringify(responseJson, null, '\t'));
+            DrawSignaturesDataTable(responseJson);
             this.setState({loading: false});
         },
         fetchErrorHandler: function(err) {
@@ -1206,6 +1229,11 @@ window.onload = function() {
     }
 
     try {
+        console.log("check loading of datatables and highcharts");
+        var jquery_ver = $.fn.jquery
+        console.log("jquery_ver: " + jquery_ver);
+        console.log("$.DataTable: " + $.DataTable);
+        console.log("Highcharts: " + Highcharts);
         use_case_2.initialize();
     } catch (err) {
         console.log("got an error with use_case_2.initialize: " + err.message);
