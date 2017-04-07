@@ -1098,14 +1098,170 @@ export var use_case_2 = {};
 ██████  ██   ██    ██    ██   ██        ██    ██   ██ ██████  ███████ ███████
 */
 
-    function DrawSignaturesDataTable(tableDataJson) {
-        console.log("DrawSignaturesDataTable");
-        // console.log(JSON.stringify(response, null, '\t'));
-        // TODO: create unattached div
-        // TODO: put data table in unattached div
-        // TODO: return parent div of data table
-        return null;
-    }
+    var stringifiedWikipediaLink = function(article_title) {
+        var s = "<a title='" + article_title + "' href='https://en.wikipedia.org/wiki/" + article_title + "' target='_" + article_title + "'>" + article_title + "</a>";
+        return s;
+    };
+
+    var stringifiedGoogleLink = function(search_terms) {
+        var s = "<a title='search google' href='https://www.google.com/?q=" + search_terms.join("+") + "' target='_blank'>search</a>";
+        return s;
+    };
+
+    // var stringifiedExploreGraphLink = function(nodeID, text) {
+    //     var url = Meteor.absoluteUrl() + "explore_graph/" + encodeURIComponent(nodeID);
+    //     var s = "<a title='explore_graph' href='" + url + "' target='_bmeg_explore'>" + text + "</a>";
+    //     return s;
+    // };
+
+    var validateInput = function(inputSigs) {
+
+        if (_.isUndefined(inputSigs) || _.isNull(inputSigs)) {
+            return false;
+        }
+
+        if (inputSigs.length < 1) {
+            return false;
+        }
+
+        // if (inputSigs.length != 1) {
+        // return false;
+        // }
+        return true;
+    };
+
+    var getSignatureDisplayName = function(origName) {
+        // strip off text preceding ":"
+        var prefixRe = /^(.*?)\:/i;
+        // strip off trailing "_median"
+        var suffixRe = /_median$/i;
+        var displayName = origName.replace(prefixRe, "").replace(suffixRe, "");
+        // strip off trailing concentration
+        suffixRe = /(_[\d]+)+_mol_mol$/i;
+        displayName = displayName.replace(suffixRe, "");
+        return displayName;
+    };
+
+    function processQuartileObj(quartileObj) {
+        var precision = 3;
+
+        quartileObj.low = (quartileObj.minimum);
+        quartileObj.q1 = (quartileObj.first);
+        quartileObj.median = (quartileObj.second);
+        quartileObj.q3 = (quartileObj.third);
+        quartileObj.high = (quartileObj.maximum);
+    };
+
+    function processDataForDataTables(dataObjs) {
+        var processedDataObjs = [];
+
+        _.each(dataObjs, function(dataObj) {
+            var signatureMetadata = dataObj.signatureMetadata;
+            var score = dataObj.significance;
+            score = Number.parseFloat(score).toPrecision(3);
+            var name = signatureMetadata.eventID;
+            var median_shift = "NA";
+            if ((_.isUndefined(dataObj.sampleGroupDetails) || _.isUndefined(dataObj.backgroundGroupDetails))) {
+                console.log("no sample group details");
+            } else {
+                median_shift = (dataObj.sampleGroupDetails.quartiles.second) - (dataObj.backgroundGroupDetails.quartiles.second);
+                median_shift = Number.parseFloat(median_shift).toPrecision(3);
+                processQuartileObj(dataObj.backgroundGroupDetails.quartiles);
+                processQuartileObj(dataObj.sampleGroupDetails.quartiles);
+            }
+            processedDataObjs.push({
+                eventID: signatureMetadata.eventID,
+                name: name,
+                score: score,
+                median_shift: median_shift,
+                backgroundGroupDetails: dataObj.backgroundGroupDetails,
+                sampleGroupDetails: dataObj.sampleGroupDetails
+            });
+        });
+
+        return processedDataObjs;
+    };
+
+    function renderSigResultsDataTable(dataObjs, containerDivId) {
+        var containerDivElem = document.getElementById(containerDivId);
+        while (containerDivElem.firstChild) {
+            containerDivElem.removeChild(containerDivElem.firstChild);
+        }
+
+        var processedDataObjs = processDataForDataTables(dataObjs);
+
+        var columnObjs = [
+            {
+                data: "eventID",
+                title: "SIGNATURE NAME",
+                // render: function(data, type, row) {
+                //     displayName = getSignatureDisplayName(data);
+                //     return displayName;
+                // }
+                render: function(data, type, row) {
+                    // var s = stringifiedExploreGraphLink(data, getSignatureDisplayName(data));
+                    // return s;
+                    var s = getSignatureDisplayName(data);
+                    return s;
+                }
+            }
+        ];
+
+        // wikipedia
+        columnObjs.push({
+            data: "name",
+            title: "Wikipedia",
+            render: function(data, type, row) {
+                var displayName = getSignatureDisplayName(data);
+                var links = [];
+                _.each(displayName.split(/_/), function(drugName) {
+                    var s = stringifiedWikipediaLink(drugName);
+                    links.push(s);
+                });
+                return links.join(", ");
+            }
+        });
+
+        // google search column
+        columnObjs.push({
+            data: "name",
+            title: "Google Search",
+            render: function(data, type, row) {
+                var displayName = getSignatureDisplayName(data);
+                // var search_terms = _.union(displayName.split(/_/), Session.get("geneList"));
+                var search_terms = displayName.split(/_/);
+                var s = stringifiedGoogleLink(search_terms);
+                return s;
+            }
+        });
+
+        // add score column
+        columnObjs.push({data: "median_shift", title: "median shift"});
+        columnObjs.push({data: "score", title: "KS significance"});
+
+        // default column to sort
+        var orderObj;
+        var lastColIndex = columnObjs.length - 1;
+        orderObj = [
+            [lastColIndex, "asc"]
+        ];
+
+        console.log("processedDataObjs: " + JSON.stringify(processedDataObjs));
+        console.log("columnObjs: " + JSON.stringify(columnObjs));
+        console.log("orderObj: " + JSON.stringify(orderObj));
+
+        var sigResultsDataTableObj = $("#" + containerDivId).DataTable({
+            // supposed to make this object retrievable by ID
+            // bRetrieve : true,
+            // turn on select extension
+            select: true,
+            data: processedDataObjs,
+            columns: columnObjs,
+            order: orderObj
+        });
+
+        return sigResultsDataTableObj;
+    };
 
     /*
  ██████  ██████  ███    ███ ██████   ██████  ███    ██ ███████ ███    ██ ████████ ███████
@@ -1130,7 +1286,7 @@ export var use_case_2 = {};
     // http://blog.revathskumar.com/2015/07/submit-a-form-with-react.html
     var SubmitGeneFormComponent = React.createClass({
         getInitialState() {
-            return {inputValue: "", loading: false, errors: {}}
+            return {signaturesData: [], inputValue: "", loading: false, errors: {}}
         },
         _onChange: function(e) {
             var state = {};
@@ -1144,7 +1300,11 @@ export var use_case_2 = {};
         },
         fetchCallback: function(responseJson) {
             // console.log(JSON.stringify(responseJson, null, '\t'));
-            DrawSignaturesDataTable(responseJson);
+            // var processedDataObjs = processDataForDataTables(responseJson);
+            // console.log("processedDataObjs: " + JSON.stringify(processedDataObjs, null, '\t'));
+
+            var sigResultsDataTableObj = renderSigResultsDataTable(responseJson, 'sigResultsTable');
+
             this.setState({loading: false});
         },
         fetchErrorHandler: function(err) {
