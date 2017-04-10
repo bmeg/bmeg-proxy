@@ -5,7 +5,7 @@
   "main": "bmeg.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "orb": "./node_modules/.bin/webpack -d && cp static/js/bmeg.js ../gaia/resources/public/static/js/bmeg.js"
+    "orb": "./node_modules/.bin/webpack -d && cp static/js/bmeg.js ../gaia/resources/public/static/js/bmeg.js && cp static/js/bmeg.js ../ophion/resources/public/js/bmeg.js"
   },
   "author": "Ryan Spangler",
   "repository": "git@github.com:bmeg/gaia-bmeg.git",

@@ -5,7 +5,7 @@ import * as _ from 'underscore'
 import cytoscape from 'cytoscape'
 import * as ReactFauxDOM from 'react-faux-dom'
 import * as d3 from 'd3'
-import {Ophion} from 'ophion'
+// import {Ophion} from 'ophion'
 import 'whatwg-fetch'
 
 // import {PieChart,VertexViewer,SchemaGraph,foo} from 'ceto'
@@ -17,22 +17,22 @@ function classNames () {
   var classes = []
 
   for (var i = 0; i < arguments.length; i++) {
-	var arg = arguments[i]
-	if (!arg) continue
+	  var arg = arguments[i]
+	  if (!arg) continue
 
-	var argType = typeof arg
+	  var argType = typeof arg
 
-	if (argType === 'string' || argType === 'number') {
-	  classes.push(arg)
-	} else if (Array.isArray(arg)) {
-	  classes.push(classNames.apply(null, arg))
-	} else if (argType === 'object') {
-	  for (var key in arg) {
-		if (hasOwn.call(arg, key) && arg[key]) {
-		  classes.push(key)
-		}
+	  if (argType === 'string' || argType === 'number') {
+	    classes.push(arg)
+	  } else if (Array.isArray(arg)) {
+	    classes.push(classNames.apply(null, arg))
+	  } else if (argType === 'object') {
+	    for (var key in arg) {
+		    if (hasOwn.call(arg, key) && arg[key]) {
+		      classes.push(key)
+		    }
+	    }
 	  }
-	}
   }
 
   return classes.join(' ')
@@ -58,6 +58,317 @@ function sampleAverage(responses) {
   return line
 }
 
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////
+/////////////// OPHION
+////////////////////////////////////////////////////////////////
+
+
+function OphionQuery(parent) {
+  var parent = parent
+  var query = []
+  
+  function labels(l) {
+    if (!l) {
+      l = []
+    } else if (_.isString(l)) {
+      l = [l]
+    } else if (!_.isArray(l)) {
+      console.log("not something we know how to make labels out of:")
+      console.log(l)
+    }
+
+    return {'labels': l}
+  }
+
+  function by(b) {
+    if (_.isString(b)) {
+      out = {'key': b}
+    } else {
+      out = {'query': b.query}
+    }
+
+    return out
+  }
+
+  var operations = {
+    query: query,
+
+    V: function(l) {
+      query.push({'V': labels(l)})
+      return this
+    },
+    
+    E: function(l) {
+      query.push({'E': labels(l)})
+      return this
+    },
+    
+    incoming: function(l) {
+      query.push({'in': labels(l)})
+      return this
+    },
+
+    outgoing: function(l) {
+      query.push({'out': labels(l)})
+      return this
+    },
+
+    inEdge: function(l) {
+      query.push({'inEdge': labels(l)})
+      return this
+    },
+
+    outEdge: function(l) {
+      query.push({'outEdge': labels(l)})
+      return this
+    },
+
+    inVertex: function(l) {
+      query.push({'inVertex': labels(l)})
+      return this
+    },
+
+    outVertex: function(l) {
+      query.push({'outVertex': labels(l)})
+      return this
+    },
+
+    identity: function() {
+      query.push({'identity': true})
+      return this
+    },
+
+    mark: function(l) {
+      query.push({'as': labels(l)})
+      return this
+    },
+
+    select: function(l) {
+      query.push({'select': labels(l)})
+      return this
+    },
+
+    by: function(key) {
+      // a key is either a string or an inner query that has already been
+      // built and passed in.
+      query.push({'by': _.isString(key) ? {'key': key} : {'query': key.query}})
+      return this
+    },
+
+    id: function() {
+      query.push({'id': true})
+      return this
+    },
+
+    label: function() {
+      query.push({'label': true})
+      return this
+    },
+
+    values: function(l) {
+      query.push({'values': labels(l)})
+      return this
+    },
+
+    properties: function(l) {
+      query.push({'properties': labels(l)})
+      return this
+    },
+
+    propertyMap: function(l) {
+      query.push({'propertyMap': labels(l)})
+      return this
+    },
+
+    dedup: function(l) {
+      query.push({'dedup': labels(l)})
+      return this
+    },
+
+    limit: function(l) {
+      query.push({'limit': l})
+      return this
+    },
+
+    range: function(lower, upper) {
+      query.push({'lower': lower, 'upper': upper})
+      return this
+    },
+
+    count: function() {
+      query.push({'count': true})
+      return this
+    },
+
+    path: function() {
+      query.push({'path': true})
+      return this
+    },
+
+    aggregate: function(label) {
+      query.push({'aggregate': label})
+      return this
+    },
+
+    // group: function(by) {
+    //   if (!)
+    //   query.push({'groupCount': label})
+    //   return this
+    // },
+
+    groupCount: function(b) {
+      query.push({'groupCount': by(b)})
+      return this
+    },
+
+    is: function(condition) {
+      query.push({'is': condition})
+      return this
+    },
+
+    has: function(key, h) {
+      var out = {'key': key}
+      if (_.isString(h) || _.isNumber(h)) {
+        out['value'] = value(h)
+      } else if (_.isArray(h)) {
+        out['query'] = h.query
+      } else {
+        out['condition'] = h
+      }
+
+      query.push({'has': out})
+      return this
+    },
+
+    hasLabel: function(l) {
+      query.push({'hasLabel': labels(l)})
+      return this
+    },    
+
+    hasNot: function(key) {
+      query.push({'hasNot': key})
+      return this
+    },    
+
+    match: function(queries) {
+      query.push({'match': {'queries': _.map(function(query) {return query.query}, queries)}})
+      return this
+    },
+
+    execute: function(callback) {
+      parent.execute({query:query}, callback)
+    }
+  }
+
+  return operations
+}
+
+function Ophion() {
+  var queryBase = '/vertex/query'
+
+  function value(x) {
+    if (_.isString(x)) {
+      v = {'s': x}
+    } else if (_.isNumber(x)) {
+      if (x === Math.floor(x)) {
+        v = {'n': x}
+      } else {
+        v = {'r': x}
+      }
+    }
+
+    return v ? v : x
+  }
+
+  return {
+    execute: function(query, callback) {
+      fetch(queryBase, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+        body: JSON.stringify(query),
+      }).then(function(response) {
+        return response.json()
+      }).then(callback)
+    },
+
+    query: function() {
+      return OphionQuery(this)
+    },
+
+    q: function() {
+      return OphionQuery(this)
+    },
+
+    as: function(l) {
+      return OphionQuery(this).as(l)
+    },
+
+    eq: function(x) {
+      return {'eq': value(x)}
+    },
+
+    neq: function(x) {
+      return {'neq': value(x)}
+    },
+
+    gt: function(x) {
+      return {'gt': value(x)}
+    },
+
+    gte: function(x) {
+      return {'gte': value(x)}
+    },
+
+    lt: function(x) {
+      return {'lt': value(x)}
+    },
+
+    lte: function(x) {
+      return {'lte': value(x)}
+    },
+
+    between: function(lower, upper) {
+      return {'between': {'lower': value(lower), 'upper': value(upper)}}
+    },
+
+    inside: function(lower, upper) {
+      return {'inside': {'lower': value(lower), 'upper': value(upper)}}
+    },
+
+    outside: function(lower, upper) {
+      return {'outside': {'lower': value(lower), 'upper': value(upper)}}
+    },
+
+    within: function(v) {
+      return {'within': {'values': _.map(value, v)}}
+    },
+
+    without: function(v) {
+      return {'without': {'values': _.map(value, v)}}
+    }
+  }  
+}
+
+var O = Ophion()
+
+
+
+
+
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////// BMEG.IO
+//////////////////////////////////////////////////////////////
+
 var PubmedLink = function(props) {
   var url = "https://www.ncbi.nlm.nih.gov/pubmed/" + props.id
   return (<div><a href={url} target="_blank">{url}</a></div>)
@@ -65,14 +376,14 @@ var PubmedLink = function(props) {
 
 var queries = {
   schema: function(callback) {
-    fetch('/gaia/schema/protograph').then(function(response) {
+    fetch('/schema/protograph').then(function(response) {
       response.json().then(callback)
     })
   },
 
   firstVertex: function(label) {
     return function(callback) {
-      Ophion().query().label(label).limit(1).execute(function(result) {
+      O.query().label(label).limit(1).execute(function(result) {
         console.log(result)
         callback(result.result[0])
       })
@@ -81,7 +392,7 @@ var queries = {
 
   variantTypeCounts: function(gene) {
     return function(callback) {
-      Ophion().query().has("gid", ["gene:" + gene]).incoming("affectsGene").outgoing("termFor").groupCount("variant").by("term").cap(["variant"]).execute(function(result) {
+      O.query().has("gid", "gene:" + gene).incoming("affectsGene").outgoing("termFor").groupCount("variant").execute(function(result) {
         console.log(result)
         callback(result.result[0])
       })
@@ -90,7 +401,7 @@ var queries = {
 
   mutationCounts: function(gene) {
     return function(callback) {
-      Ophion().query().has("gid", ["gene:" + gene]).incoming("affectsGene").incoming("transcriptEffectOf").outgoing("annotationFor").outgoing("inCallSet").outgoing("callsFor").outgoing("diseaseOf").groupCount("term").by("term").cap(["term"]).execute(function(result) {
+      O.query().has("gid", "gene:" + gene).incoming("affectsGene").incoming("transcriptEffectOf").outgoing("annotationFor").outgoing("inCallSet").outgoing("callsFor").outgoing("diseaseOf").groupCount("term").execute(function(result) {
         console.log(result)
         callback(result.result[0])
       })
@@ -98,7 +409,7 @@ var queries = {
   },
 
   geneExists: function(gene, callback) {
-    Ophion().query().has("gid", ["gene:" + gene]).execute(function(result) {
+    O.query().has("gid", "gene:" + gene).execute(function(result) {
       console.log(result)
       callback(!_.isEmpty(result.result))
     })
@@ -106,8 +417,8 @@ var queries = {
 
   cohortCompounds: function(cohort) {
     return function(callback) {
-      Ophion().query().has("gid", ["type:Compound"]).outgoing("hasInstance").values(["gid"]).execute(function(result) {
-        // Ophion().query().has("gid", ["cohort:" + cohort]).outgoing("hasMember").incoming("responseOf").outgoing("responseTo").dedup().values(["gid"]).execute(function(result) {
+      O.query().has("gid", "type:Compound").outgoing("hasInstance").values(["gid"]).execute(function(result) {
+        // O.query().has("gid", ["cohort:" + cohort]).outgoing("hasMember").incoming("responseOf").outgoing("responseTo").dedup().values(["gid"]).execute(function(result) {
         
         console.log(result)
         callback(result.result)
@@ -117,7 +428,7 @@ var queries = {
 
   cohortGids: function(cohort) {
     return function(callback) {
-      Ophion().query().has("gid", ["cohort:" + cohort]).outgoing("hasMember").mark("a").incoming("callsFor").select(["a"]).values(["gid"]).execute(function(result) {
+      O.query().has("gid", "cohort:" + cohort).outgoing("hasMember").mark("a").incoming("callsFor").select(["a"]).values(["gid"]).execute(function(result) {
         console.log(result)
         callback(result.result)
       })
@@ -126,7 +437,7 @@ var queries = {
 
   samplesWithMutations: function(cohort, gene) {
     return function(callback) {
-      Ophion().query().has("gid", ["gene:" + gene] ).incoming("affectsGene").incoming("transcriptEffectOf").outgoing("annotationFor").outgoing("inCallSet").outgoing("callsFor").mark("a").incoming("hasMember").has("gid", ["cohort:" + cohort]).select(["a"]).values(["gid"]).execute(function(result) {
+      O.query().has("gid", "gene:" + gene).incoming("affectsGene").incoming("transcriptEffectOf").outgoing("annotationFor").outgoing("inCallSet").outgoing("callsFor").mark("a").incoming("hasMember").has("gid", "cohort:" + cohort).select(["a"]).values(["gid"]).execute(function(result) {
         console.log(result)
         callback(result.result)
       })
@@ -135,7 +446,7 @@ var queries = {
 
   sampleResponses: function(samples, drug) {
     return function(callback) {
-      Ophion().query().has("gid", ['compound:' + drug]).incoming("responseTo").mark('a').outgoing('responseOf').has("gid", samples).select(['a']).values(['responseSummary', 'responseValues']).execute(function(result) {
+      O.query().has("gid", 'compound:' + drug).incoming("responseTo").mark('a').outgoing('responseOf').has("gid", O.within(samples)).select(['a']).values(['responseSummary', 'responseValues']).execute(function(result) {
         console.log(result)
         callback(result.result)
       })
@@ -143,8 +454,12 @@ var queries = {
   },
 
   cnaCallsByGene: function(cohort, gene) {
-    // O.query().has("gid", "cohort:CCLE").outgoing("hasMember").incoming("cnaCallsFor").incoming("inCNACallSet").outgoing("calledInGene").execute()
-    // group by gene symbol, average cna value 
+    return function(callback) {
+      O.query().has("gid", "cohort:" + cohort).outgoing("hasMember").incoming("cnaCallsFor").incoming("inCNACallSet").outgoing("calledInGene").execute()
+      // group by gene symbol, average cna value
+      console.log(result)
+      callback(result.result)
+    }
   }
 }
 
@@ -724,7 +1039,7 @@ function extractLabel(label) {
 }
 
 function fetchVertex(gid, callback) {
-  fetch("/gaia/vertex/find/" + gid).then(function(response) {return response.json()}).then(callback)
+  fetch("/vertex/find/" + gid).then(function(response) {return response.json()}).then(callback)
 }
 
 var VertexViewer = React.createClass({
