@@ -68,6 +68,21 @@ function sampleAverage(responses) {
 ////////////////////////////////////////////////////////////////
 
 
+function value(x) {
+  var v = null
+  if (_.isString(x)) {
+    v = {'s': x}
+  } else if (_.isNumber(x)) {
+    if (x === Math.floor(x)) {
+      v = {'n': x}
+    } else {
+      v = {'r': x}
+    }
+  }
+
+  return v ? v : x
+}
+
 function OphionQuery(parent) {
   var parent = parent
   var query = []
@@ -261,7 +276,7 @@ function OphionQuery(parent) {
     },
 
     execute: function(callback) {
-      parent.execute({query:query}, callback)
+      parent.execute(query, callback)
     }
   }
 
@@ -270,20 +285,6 @@ function OphionQuery(parent) {
 
 function Ophion() {
   var queryBase = '/vertex/query'
-
-  function value(x) {
-    if (_.isString(x)) {
-      v = {'s': x}
-    } else if (_.isNumber(x)) {
-      if (x === Math.floor(x)) {
-        v = {'n': x}
-      } else {
-        v = {'r': x}
-      }
-    }
-
-    return v ? v : x
-  }
 
   return {
     execute: function(query, callback) {
@@ -383,9 +384,10 @@ var queries = {
 
   firstVertex: function(label) {
     return function(callback) {
-      O.query().label(label).limit(1).execute(function(result) {
+      O.query().has("gid", "type:" + label).outgoing("hasInstance").limit(1).execute(function(result) {
         console.log(result)
-        callback(result.result[0])
+        // callback(result.result[0])
+        callback(result)
       })
     }
   },
