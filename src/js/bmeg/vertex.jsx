@@ -1182,10 +1182,10 @@ export var use_case_2 = {};
         return processedDataObjs;
     };
 
-    function renderSigResultsDataTable(dataObjs, containerDivId) {
-        var containerDivElem = document.getElementById(containerDivId);
-        while (containerDivElem.firstChild) {
-            containerDivElem.removeChild(containerDivElem.firstChild);
+    function renderSigResultsDataTable(dataObjs, containerTableTagId) {
+        var containerTableTagElem = document.getElementById(containerTableTagId);
+        while (containerTableTagElem.firstChild) {
+            containerTableTagElem.removeChild(containerTableTagElem.firstChild);
         }
 
         var processedDataObjs = processDataForDataTables(dataObjs);
@@ -1250,7 +1250,7 @@ export var use_case_2 = {};
         console.log("columnObjs: " + JSON.stringify(columnObjs));
         console.log("orderObj: " + JSON.stringify(orderObj));
 
-        var sigResultsDataTableObj = $("#" + containerDivId).DataTable({
+        var sigResultsDataTableObj = $("#" + containerTableTagId).DataTable({
             // supposed to make this object retrievable by ID
             // bRetrieve : true,
             // turn on select extension
