@@ -18,22 +18,22 @@ function classNames () {
   var classes = []
 
   for (var i = 0; i < arguments.length; i++) {
-	  var arg = arguments[i]
-	  if (!arg) continue
+	var arg = arguments[i]
+	if (!arg) continue
 
-	  var argType = typeof arg
+	var argType = typeof arg
 
-	  if (argType === 'string' || argType === 'number') {
-	    classes.push(arg)
-	  } else if (Array.isArray(arg)) {
-	    classes.push(classNames.apply(null, arg))
-	  } else if (argType === 'object') {
-	    for (var key in arg) {
-		    if (hasOwn.call(arg, key) && arg[key]) {
-		      classes.push(key)
-		    }
-	    }
+	if (argType === 'string' || argType === 'number') {
+	  classes.push(arg)
+	} else if (Array.isArray(arg)) {
+	  classes.push(classNames.apply(null, arg))
+	} else if (argType === 'object') {
+	  for (var key in arg) {
+		if (hasOwn.call(arg, key) && arg[key]) {
+		  classes.push(key)
+		}
 	  }
+	}
   }
 
   return classes.join(' ')
@@ -103,12 +103,10 @@ function OphionQuery(parent) {
 
   function by(b) {
     if (_.isString(b)) {
-      out = {'key': b}
+      return {'key': b}
     } else {
-      out = {'query': b.query}
+      return {'query': b.query}
     }
-
-    return out
   }
 
   var operations = {
@@ -272,7 +270,7 @@ function OphionQuery(parent) {
     },    
 
     match: function(queries) {
-      query.push({'match': {'queries': _.map(function(query) {return query.query}, queries)}})
+      query.push({'match': {'queries': _.map(queries, function(query) {return query.query})}})
       return this
     },
 
@@ -364,13 +362,13 @@ function Ophion() {
     },
 
     within: function(v) {
-      return {'within': {'values': _.map(value, v)}}
+      return {'within': _.map(v, value)}
     },
 
     without: function(v) {
-      return {'without': {'values': _.map(value, v)}}
+      return {'without': _.map(v, value)}
     }
-  }  
+  }
 }
 
 var O = Ophion()
@@ -403,6 +401,7 @@ var queries = {
   firstVertex: function(label) {
     return function(callback) {
       O.query().has("gid", "type:" + label).outgoing("hasInstance").limit(1).execute(function(result) {
+        console.log('firstVertex')
         console.log(result)
         callback(result[0])
       })
@@ -411,7 +410,9 @@ var queries = {
 
   variantTypeCounts: function(gene) {
     return function(callback) {
-      O.query().has("gid", "gene:" + gene).incoming("affectsGene").outgoing("termFor").groupCount("variant").execute(function(result) {
+      // O.query().has("gid", "gene:" + gene).incoming("affectsGene").outgoing("termFor").groupCount("variant").execute(function(result) {
+      O.query().has("gid", "gene:" + gene).incoming("variantInGene").outgoing("termFor").groupCount("variant").execute(function(result) {        
+        console.log('variantTypeCounts')
         console.log(result)
         callback(result)
       })
@@ -420,25 +421,27 @@ var queries = {
 
   mutationCounts: function(gene) {
     return function(callback) {
-      O.query().has("gid", "gene:" + gene).incoming("affectsGene").incoming("transcriptEffectOf").outgoing("annotationFor").outgoing("inCallSet").outgoing("callsFor").outgoing("diseaseOf").groupCount("term").execute(function(result) {
+      // O.query().has("gid", "gene:" + gene).incoming("affectsGene").incoming("transcriptEffectOf").outgoing("annotationFor").outgoing("inCallSet").outgoing("callsFor").outgoing("diseaseOf").groupCount("term").execute(function(result) {
+      O.query().has("gid", "gene:" + gene).incoming("variantInGene").outgoing("variantInBiosample").outgoing("termForDisease").groupCount("term").execute(function(result) {        
+        console.log('mutationCounts')
         console.log(result)
-        callback(result)
+        callback(result[0])
       })
     }
   },
 
   geneExists: function(gene, callback) {
     O.query().has("gid", "gene:" + gene).execute(function(result) {
+      console.log('geneExists')
       console.log(result)
-      callback(!_.isEmpty(result))
+      callback(!_.isEmpty(result[0]))
     })
   },
 
   cohortCompounds: function(cohort) {
     return function(callback) {
       O.query().has("gid", "type:Compound").outgoing("hasInstance").values(["gid"]).execute(function(result) {
-        // O.query().has("gid", ["cohort:" + cohort]).outgoing("hasMember").incoming("responseOf").outgoing("responseTo").dedup().values(["gid"]).execute(function(result) {
-        
+        console.log('cohortCompounds')
         console.log(result)
         callback(result)
       })
@@ -447,8 +450,8 @@ var queries = {
 
   cohortGids: function(cohort) {
     return function(callback) {
-      // O.query().has("gid", "cohort:" + cohort).outgoing("hasSample").mark("a").incoming("callsFor").select(["a"]).values(["gid"]).execute(function(result) {
       O.query().has("gid", "cohort:" + cohort).outgoing("hasSample").values(["gid"]).execute(function(result) {
+        console.log('cohortGids')
         console.log(result)
         callback(result)
       })
@@ -457,7 +460,8 @@ var queries = {
 
   samplesWithMutations: function(cohort, gene) {
     return function(callback) {
-      O.query().has("gid", "gene:" + gene).incoming("affectsGene").incoming("transcriptEffectOf").outgoing("annotationFor").outgoing("inCallSet").outgoing("callsFor").mark("a").incoming("hasMember").has("gid", "cohort:" + cohort).select(["a"]).values(["gid"]).execute(function(result) {
+      O.query().has("gid", "gene:" + gene).incoming("variantInGene").outgoing("variantInBiosample").mark("a").incoming("hasSample").has("gid", "cohort:" + cohort).select(["a"]).values(["gid"]).execute(function(result) {
+        console.log('samplesWithMutations')
         console.log(result)
         callback(result)
       })
@@ -466,7 +470,10 @@ var queries = {
 
   sampleResponses: function(samples, drug) {
     return function(callback) {
-      O.query().has("gid", 'compound:' + drug).incoming("responseTo").mark('a').outgoing('responseOf').has("gid", O.within(samples)).select(['a']).values(['responseSummary', 'responseValues']).execute(function(result) {
+      console.log(samples)
+      console.log(_.map(samples, value))
+      O.query().has("gid", 'compound:' + drug).inEdge("responseToCompound").mark('a').outVertex().has("gid", O.within(samples)).select(['a']).values(['responseSummary', 'responseValues']).execute(function(result) {
+        console.log('sampleResponses')
         console.log(result)
         callback(result)
       })
@@ -477,6 +484,7 @@ var queries = {
     return function(callback) {
       O.query().has("gid", "cohort:" + cohort).outgoing("hasMember").incoming("cnaCallsFor").incoming("inCNACallSet").outgoing("calledInGene").execute()
       // group by gene symbol, average cna value
+      console.log('cnaCallsByGene')
       console.log(result)
       callback(result)
     }
@@ -501,7 +509,8 @@ function generateVisualizations() {
   }
 
   return {
-    'Gene': [variantTypePie, mutationPie],
+    // 'Gene': [variantTypePie, mutationPie],
+    'Gene': [mutationPie],
     'Pubmed': [pubmedLink],
     'Cohort': [drugResponse]
   }
@@ -545,7 +554,7 @@ var PieChart = React.createClass({
 
     var el = ReactFauxDOM.createElement('svg')
     el.setAttribute('width', 800)
-    el.setAttribute('height', 300)
+    el.setAttribute('height', Object.keys(data).length * 20)
     
     var pie = d3.pie().value(function(d) {return d.value})
     var slices = pie(cohort)
