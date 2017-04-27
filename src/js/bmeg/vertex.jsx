@@ -11,6 +11,7 @@ import 'whatwg-fetch'
 // import {PieChart,VertexViewer,SchemaGraph,foo} from 'ceto'
 // import {PieChart} from 'ceto'
 
+var loadingSpinner = '/img/ripple.gif'
 var hasOwn = {}.hasOwnProperty
 
 function classNames () {
@@ -403,8 +404,7 @@ var queries = {
     return function(callback) {
       O.query().has("gid", "type:" + label).outgoing("hasInstance").limit(1).execute(function(result) {
         console.log(result)
-        // callback(result.result[0])
-        callback(result)
+        callback(result[0])
       })
     }
   },
@@ -530,7 +530,7 @@ var keyify = function(s) {
 
 var PieChart = React.createClass({
   getInitialState: function() {
-    var pie = <div><img src='/static/ripple.gif' /></div>
+    var pie = <div><img src={loadingSpinner} /></div>
         return {pie: pie}
   },
   
@@ -1121,7 +1121,7 @@ var VertexViewer = React.createClass({
     var loading = ""
     var we = this
     if (this.state.loading) {
-      loading = <img src="/static/ripple.gif" width="50px" />
+      loading = <img src="/img/ripple.gif" width="50px" />
     }
 
     var error
@@ -1435,7 +1435,7 @@ class SchemaViewer extends Component {
       var schema = <SchemaGraph key="schema" ref="schema" width={this.props.width} height={this.props.height} schema={this.state.schema} />
           elements.push(schema)
     } else {
-      elements.push(<div key="loading"><img src='/static/ripple.gif' /></div>)
+      elements.push(<div key="loading"><img src={loadingSpinner} /></div>)
     }
     return (
         <div>
