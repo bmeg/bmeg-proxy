@@ -5,12 +5,17 @@ import * as _ from 'underscore'
 import cytoscape from 'cytoscape'
 import * as ReactFauxDOM from 'react-faux-dom'
 import * as d3 from 'd3'
-// import {Ophion} from 'ophion'
+import {PieChart,VertexViewer,SchemaGraph,DrugResponse} from 'ceto'
+// import VertexViewer from 'ceto'
+// import SchemaGraph from 'ceto'
+// import DrugResponse from 'ceto'
+import {Ophion} from 'ophion'
 import 'whatwg-fetch'
 
 // import {PieChart,VertexViewer,SchemaGraph,foo} from 'ceto'
 // import {PieChart} from 'ceto'
 
+var O = Ophion()
 var hasOwn = {}.hasOwnProperty
 
 function classNames () {
@@ -68,293 +73,293 @@ function sampleAverage(responses) {
 ////////////////////////////////////////////////////////////////
 
 
-function OphionQuery(parent) {
-  var parent = parent
-  var query = []
+// function OphionQuery(parent) {
+//   var parent = parent
+//   var query = []
   
-  function labels(l) {
-    if (!l) {
-      l = []
-    } else if (_.isString(l)) {
-      l = [l]
-    } else if (!_.isArray(l)) {
-      console.log("not something we know how to make labels out of:")
-      console.log(l)
-    }
+//   function labels(l) {
+//     if (!l) {
+//       l = []
+//     } else if (_.isString(l)) {
+//       l = [l]
+//     } else if (!_.isArray(l)) {
+//       console.log("not something we know how to make labels out of:")
+//       console.log(l)
+//     }
 
-    return {'labels': l}
-  }
+//     return {'labels': l}
+//   }
 
-  function by(b) {
-    if (_.isString(b)) {
-      out = {'key': b}
-    } else {
-      out = {'query': b.query}
-    }
+//   function by(b) {
+//     if (_.isString(b)) {
+//       out = {'key': b}
+//     } else {
+//       out = {'query': b.query}
+//     }
 
-    return out
-  }
+//     return out
+//   }
 
-  var operations = {
-    query: query,
+//   var operations = {
+//     query: query,
 
-    V: function(l) {
-      query.push({'V': labels(l)})
-      return this
-    },
+//     V: function(l) {
+//       query.push({'V': labels(l)})
+//       return this
+//     },
     
-    E: function(l) {
-      query.push({'E': labels(l)})
-      return this
-    },
+//     E: function(l) {
+//       query.push({'E': labels(l)})
+//       return this
+//     },
     
-    incoming: function(l) {
-      query.push({'in': labels(l)})
-      return this
-    },
+//     incoming: function(l) {
+//       query.push({'in': labels(l)})
+//       return this
+//     },
 
-    outgoing: function(l) {
-      query.push({'out': labels(l)})
-      return this
-    },
+//     outgoing: function(l) {
+//       query.push({'out': labels(l)})
+//       return this
+//     },
 
-    inEdge: function(l) {
-      query.push({'inEdge': labels(l)})
-      return this
-    },
+//     inEdge: function(l) {
+//       query.push({'inEdge': labels(l)})
+//       return this
+//     },
 
-    outEdge: function(l) {
-      query.push({'outEdge': labels(l)})
-      return this
-    },
+//     outEdge: function(l) {
+//       query.push({'outEdge': labels(l)})
+//       return this
+//     },
 
-    inVertex: function(l) {
-      query.push({'inVertex': labels(l)})
-      return this
-    },
+//     inVertex: function(l) {
+//       query.push({'inVertex': labels(l)})
+//       return this
+//     },
 
-    outVertex: function(l) {
-      query.push({'outVertex': labels(l)})
-      return this
-    },
+//     outVertex: function(l) {
+//       query.push({'outVertex': labels(l)})
+//       return this
+//     },
 
-    identity: function() {
-      query.push({'identity': true})
-      return this
-    },
+//     identity: function() {
+//       query.push({'identity': true})
+//       return this
+//     },
 
-    mark: function(l) {
-      query.push({'as': labels(l)})
-      return this
-    },
+//     mark: function(l) {
+//       query.push({'as': labels(l)})
+//       return this
+//     },
 
-    select: function(l) {
-      query.push({'select': labels(l)})
-      return this
-    },
+//     select: function(l) {
+//       query.push({'select': labels(l)})
+//       return this
+//     },
 
-    by: function(key) {
-      // a key is either a string or an inner query that has already been
-      // built and passed in.
-      query.push({'by': _.isString(key) ? {'key': key} : {'query': key.query}})
-      return this
-    },
+//     by: function(key) {
+//       // a key is either a string or an inner query that has already been
+//       // built and passed in.
+//       query.push({'by': _.isString(key) ? {'key': key} : {'query': key.query}})
+//       return this
+//     },
 
-    id: function() {
-      query.push({'id': true})
-      return this
-    },
+//     id: function() {
+//       query.push({'id': true})
+//       return this
+//     },
 
-    label: function() {
-      query.push({'label': true})
-      return this
-    },
+//     label: function() {
+//       query.push({'label': true})
+//       return this
+//     },
 
-    values: function(l) {
-      query.push({'values': labels(l)})
-      return this
-    },
+//     values: function(l) {
+//       query.push({'values': labels(l)})
+//       return this
+//     },
 
-    properties: function(l) {
-      query.push({'properties': labels(l)})
-      return this
-    },
+//     properties: function(l) {
+//       query.push({'properties': labels(l)})
+//       return this
+//     },
 
-    propertyMap: function(l) {
-      query.push({'propertyMap': labels(l)})
-      return this
-    },
+//     propertyMap: function(l) {
+//       query.push({'propertyMap': labels(l)})
+//       return this
+//     },
 
-    dedup: function(l) {
-      query.push({'dedup': labels(l)})
-      return this
-    },
+//     dedup: function(l) {
+//       query.push({'dedup': labels(l)})
+//       return this
+//     },
 
-    limit: function(l) {
-      query.push({'limit': l})
-      return this
-    },
+//     limit: function(l) {
+//       query.push({'limit': l})
+//       return this
+//     },
 
-    range: function(lower, upper) {
-      query.push({'lower': lower, 'upper': upper})
-      return this
-    },
+//     range: function(lower, upper) {
+//       query.push({'lower': lower, 'upper': upper})
+//       return this
+//     },
 
-    count: function() {
-      query.push({'count': true})
-      return this
-    },
+//     count: function() {
+//       query.push({'count': true})
+//       return this
+//     },
 
-    path: function() {
-      query.push({'path': true})
-      return this
-    },
+//     path: function() {
+//       query.push({'path': true})
+//       return this
+//     },
 
-    aggregate: function(label) {
-      query.push({'aggregate': label})
-      return this
-    },
+//     aggregate: function(label) {
+//       query.push({'aggregate': label})
+//       return this
+//     },
 
-    // group: function(by) {
-    //   if (!)
-    //   query.push({'groupCount': label})
-    //   return this
-    // },
+//     // group: function(by) {
+//     //   if (!)
+//     //   query.push({'groupCount': label})
+//     //   return this
+//     // },
 
-    groupCount: function(b) {
-      query.push({'groupCount': by(b)})
-      return this
-    },
+//     groupCount: function(b) {
+//       query.push({'groupCount': by(b)})
+//       return this
+//     },
 
-    is: function(condition) {
-      query.push({'is': condition})
-      return this
-    },
+//     is: function(condition) {
+//       query.push({'is': condition})
+//       return this
+//     },
 
-    has: function(key, h) {
-      var out = {'key': key}
-      if (_.isString(h) || _.isNumber(h)) {
-        out['value'] = value(h)
-      } else if (_.isArray(h)) {
-        out['query'] = h.query
-      } else {
-        out['condition'] = h
-      }
+//     has: function(key, h) {
+//       var out = {'key': key}
+//       if (_.isString(h) || _.isNumber(h)) {
+//         out['value'] = value(h)
+//       } else if (_.isArray(h)) {
+//         out['query'] = h.query
+//       } else {
+//         out['condition'] = h
+//       }
 
-      query.push({'has': out})
-      return this
-    },
+//       query.push({'has': out})
+//       return this
+//     },
 
-    hasLabel: function(l) {
-      query.push({'hasLabel': labels(l)})
-      return this
-    },    
+//     hasLabel: function(l) {
+//       query.push({'hasLabel': labels(l)})
+//       return this
+//     },    
 
-    hasNot: function(key) {
-      query.push({'hasNot': key})
-      return this
-    },    
+//     hasNot: function(key) {
+//       query.push({'hasNot': key})
+//       return this
+//     },    
 
-    match: function(queries) {
-      query.push({'match': {'queries': _.map(function(query) {return query.query}, queries)}})
-      return this
-    },
+//     match: function(queries) {
+//       query.push({'match': {'queries': _.map(function(query) {return query.query}, queries)}})
+//       return this
+//     },
 
-    execute: function(callback) {
-      parent.execute({query:query}, callback)
-    }
-  }
+//     execute: function(callback) {
+//       parent.execute({query:query}, callback)
+//     }
+//   }
 
-  return operations
-}
+//   return operations
+// }
 
-function Ophion() {
-  var queryBase = '/vertex/query'
+// function Ophion() {
+//   var queryBase = '/vertex/query'
 
-  function value(x) {
-    if (_.isString(x)) {
-      v = {'s': x}
-    } else if (_.isNumber(x)) {
-      if (x === Math.floor(x)) {
-        v = {'n': x}
-      } else {
-        v = {'r': x}
-      }
-    }
+//   function value(x) {
+//     if (_.isString(x)) {
+//       v = {'s': x}
+//     } else if (_.isNumber(x)) {
+//       if (x === Math.floor(x)) {
+//         v = {'n': x}
+//       } else {
+//         v = {'r': x}
+//       }
+//     }
 
-    return v ? v : x
-  }
+//     return v ? v : x
+//   }
 
-  return {
-    execute: function(query, callback) {
-      fetch(queryBase, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
-        body: JSON.stringify(query),
-      }).then(function(response) {
-        return response.json()
-      }).then(callback)
-    },
+//   return {
+//     execute: function(query, callback) {
+//       fetch(queryBase, {
+//         method: 'POST',
+//         headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+//         body: JSON.stringify(query),
+//       }).then(function(response) {
+//         return response.json()
+//       }).then(callback)
+//     },
 
-    query: function() {
-      return OphionQuery(this)
-    },
+//     query: function() {
+//       return OphionQuery(this)
+//     },
 
-    q: function() {
-      return OphionQuery(this)
-    },
+//     q: function() {
+//       return OphionQuery(this)
+//     },
 
-    as: function(l) {
-      return OphionQuery(this).as(l)
-    },
+//     as: function(l) {
+//       return OphionQuery(this).as(l)
+//     },
 
-    eq: function(x) {
-      return {'eq': value(x)}
-    },
+//     eq: function(x) {
+//       return {'eq': value(x)}
+//     },
 
-    neq: function(x) {
-      return {'neq': value(x)}
-    },
+//     neq: function(x) {
+//       return {'neq': value(x)}
+//     },
 
-    gt: function(x) {
-      return {'gt': value(x)}
-    },
+//     gt: function(x) {
+//       return {'gt': value(x)}
+//     },
 
-    gte: function(x) {
-      return {'gte': value(x)}
-    },
+//     gte: function(x) {
+//       return {'gte': value(x)}
+//     },
 
-    lt: function(x) {
-      return {'lt': value(x)}
-    },
+//     lt: function(x) {
+//       return {'lt': value(x)}
+//     },
 
-    lte: function(x) {
-      return {'lte': value(x)}
-    },
+//     lte: function(x) {
+//       return {'lte': value(x)}
+//     },
 
-    between: function(lower, upper) {
-      return {'between': {'lower': value(lower), 'upper': value(upper)}}
-    },
+//     between: function(lower, upper) {
+//       return {'between': {'lower': value(lower), 'upper': value(upper)}}
+//     },
 
-    inside: function(lower, upper) {
-      return {'inside': {'lower': value(lower), 'upper': value(upper)}}
-    },
+//     inside: function(lower, upper) {
+//       return {'inside': {'lower': value(lower), 'upper': value(upper)}}
+//     },
 
-    outside: function(lower, upper) {
-      return {'outside': {'lower': value(lower), 'upper': value(upper)}}
-    },
+//     outside: function(lower, upper) {
+//       return {'outside': {'lower': value(lower), 'upper': value(upper)}}
+//     },
 
-    within: function(v) {
-      return {'within': {'values': _.map(value, v)}}
-    },
+//     within: function(v) {
+//       return {'within': {'values': _.map(value, v)}}
+//     },
 
-    without: function(v) {
-      return {'without': {'values': _.map(value, v)}}
-    }
-  }  
-}
+//     without: function(v) {
+//       return {'without': {'values': _.map(value, v)}}
+//     }
+//   }  
+// }
 
-var O = Ophion()
+
 
 
 
@@ -369,10 +374,10 @@ var O = Ophion()
 //////////////////////// BMEG.IO
 //////////////////////////////////////////////////////////////
 
-var PubmedLink = function(props) {
-  var url = "https://www.ncbi.nlm.nih.gov/pubmed/" + props.id
-  return (<div><a href={url} target="_blank">{url}</a></div>)
-}
+// var PubmedLink = function(props) {
+//   var url = "https://www.ncbi.nlm.nih.gov/pubmed/" + props.id
+//   return (<div><a href={url} target="_blank">{url}</a></div>)
+// }
 
 var queries = {
   schema: function(callback) {
@@ -477,7 +482,7 @@ function generateVisualizations() {
   }
 
   function drugResponse(vertex) {
-    return <DrugResponse key="drug-response" cohort={vertex.properties.name} />
+    return <DrugResponse key="drug-response" cohort={vertex.properties.name} queries={queries} />
   }
 
   return {
@@ -503,330 +508,330 @@ function generateVisualizations() {
 ////////////// PIE CHART
 ///////////////////////////////////////////
 
-var nonalpha = /[^a-zA-Z]/g
-var keyify = function(s) {
-  return s.split(nonalpha).join('')
-}
+// var nonalpha = /[^a-zA-Z]/g
+// var keyify = function(s) {
+//   return s.split(nonalpha).join('')
+// }
 
-var PieChart = React.createClass({
-  getInitialState: function() {
-    var pie = <div><img src='/static/ripple.gif' /></div>
-        return {pie: pie}
-  },
+// var PieChart = React.createClass({
+//   getInitialState: function() {
+//     var pie = <div><img src='/static/ripple.gif' /></div>
+//         return {pie: pie}
+//   },
   
-  buildPie: function(data) {
-    var cohort = Object.keys(data).map(function(key) {
-      return {"title": key, "value": data[key]}
-    })
+//   buildPie: function(data) {
+//     var cohort = Object.keys(data).map(function(key) {
+//       return {"title": key, "value": data[key]}
+//     })
 
-    cohort.sort(function(a, b) {
-      return a.value < b.value ? 1 : a.value > b.value ? -1 : 0
-    })
+//     cohort.sort(function(a, b) {
+//       return a.value < b.value ? 1 : a.value > b.value ? -1 : 0
+//     })
 
-    var el = ReactFauxDOM.createElement('svg')
-    el.setAttribute('width', 800)
-    el.setAttribute('height', 300)
+//     var el = ReactFauxDOM.createElement('svg')
+//     el.setAttribute('width', 800)
+//     el.setAttribute('height', 300)
     
-    var pie = d3.pie().value(function(d) {return d.value})
-    var slices = pie(cohort)
-    var arc = d3.arc().innerRadius(0).outerRadius(100)
-    var color = d3.scaleOrdinal(d3.schemeCategory20b)
+//     var pie = d3.pie().value(function(d) {return d.value})
+//     var slices = pie(cohort)
+//     var arc = d3.arc().innerRadius(0).outerRadius(100)
+//     var color = d3.scaleOrdinal(d3.schemeCategory20b)
 
-    var svg = d3.select(el)
-    var g = svg.append('g').attr('transform', 'translate(300, 100)')
+//     var svg = d3.select(el)
+//     var g = svg.append('g').attr('transform', 'translate(300, 100)')
     
-    g.selectAll('path.piechart')
-      .data(slices, function(d) {return d.data.title})
-      .enter()
-      .append('path')
-      .attr('class', function(d) {return 'slice ' + keyify(d.data.title)})
-      .attr('d', arc)
-      .attr('fill', function(d) {return color(d.data.title)})
+//     g.selectAll('path.piechart')
+//       .data(slices, function(d) {return d.data.title})
+//       .enter()
+//       .append('path')
+//       .attr('class', function(d) {return 'slice ' + keyify(d.data.title)})
+//       .attr('d', arc)
+//       .attr('fill', function(d) {return color(d.data.title)})
     
-    svg.append('g')
-      .attr('class', 'legend')
-      .selectAll('text')
-      .data(slices, function(d) {return d.data.title})
-      .enter()
-      .append('text')
-      .text(function(d) { return '- ' + d.data.title })
-      .attr('fill', function(d) { return color(d.data.title) })
-      .attr('y', function(d, i) { return 20 * (i + 1) })
-      .on("mouseover", function(dOver, i) { 
-        console.log("mouseover " + keyify(dOver.data.title))
-        var key = keyify(dOver.data.title)
-        d3.selectAll('.slice.' + key)
-          .attr('fill', 'white')
-      })
-      .on("mouseout", function(dOut, i) { 
-        console.log("mouseout " + keyify(dOut.data.title))
-        var key = keyify(dOut.data.title)
-        d3.selectAll('.slice.' + key)
-          .data([dOut])
-          .attr('fill', color(dOut.data.title))
-      })
+//     svg.append('g')
+//       .attr('class', 'legend')
+//       .selectAll('text')
+//       .data(slices, function(d) {return d.data.title})
+//       .enter()
+//       .append('text')
+//       .text(function(d) { return '- ' + d.data.title })
+//       .attr('fill', function(d) { return color(d.data.title) })
+//       .attr('y', function(d, i) { return 20 * (i + 1) })
+//       .on("mouseover", function(dOver, i) { 
+//         console.log("mouseover " + keyify(dOver.data.title))
+//         var key = keyify(dOver.data.title)
+//         d3.selectAll('.slice.' + key)
+//           .attr('fill', 'white')
+//       })
+//       .on("mouseout", function(dOut, i) { 
+//         console.log("mouseout " + keyify(dOut.data.title))
+//         var key = keyify(dOut.data.title)
+//         d3.selectAll('.slice.' + key)
+//           .data([dOut])
+//           .attr('fill', color(dOut.data.title))
+//       })
 
-    return el.toReact()
-  },
+//     return el.toReact()
+//   },
 
-  componentDidMount: function() {
-    var we = this
-    if (this.props.data) {
-      this.setState({pie: this.buildPie(this.props.data)})
-    } else if (this.props.query) {
-      this.props.query(function(results) {
-        we.setState({pie: we.buildPie(results)})
-      }.bind(this))
-    }
-  },
+//   componentDidMount: function() {
+//     var we = this
+//     if (this.props.data) {
+//       this.setState({pie: this.buildPie(this.props.data)})
+//     } else if (this.props.query) {
+//       this.props.query(function(results) {
+//         we.setState({pie: we.buildPie(results)})
+//       }.bind(this))
+//     }
+//   },
   
-  render: function() {
-    return (
-        <div>{this.state.pie}</div>
-    )
-  }
-})
+//   render: function() {
+//     return (
+//         <div>{this.state.pie}</div>
+//     )
+//   }
+// })
 
 
 
 
 
 
-function mdlCleanUp() {
-  var mdlInputs = document.getElementsByClassName('mdl-js-textfield')
-  console.log(mdlInputs)
-  for (var i = 0, l = mdlInputs.length; i < l; i++) {
-    var mdl = mdlInputs[i]
-    if (mdl.MaterialTextfield) {
-      mdl.MaterialTextfield.checkDirty()
-    }
-  }
-}
+// function mdlCleanUp() {
+//   var mdlInputs = document.getElementsByClassName('mdl-js-textfield')
+//   console.log(mdlInputs)
+//   for (var i = 0, l = mdlInputs.length; i < l; i++) {
+//     var mdl = mdlInputs[i]
+//     if (mdl.MaterialTextfield) {
+//       mdl.MaterialTextfield.checkDirty()
+//     }
+//   }
+// }
 
 /////////////////////////////////////////////////////////
 /////////////// DRUG RESPONSE
 ////////////////////////////////////////////////
 
-class GeneInput extends Component {
-  componentDidMount(){
-    // mdlCleanUp()
-    componentHandler.upgradeElement(this.refs.mdlWrapper)
-  }
+// class GeneInput extends Component {
+//   componentDidMount(){
+//     // mdlCleanUp()
+//     componentHandler.upgradeElement(this.refs.mdlWrapper)
+//   }
 
-  componentDidUpdate(){
-    // mdlCleanUp()
-    componentHandler.upgradeElement(this.refs.mdlWrapper)
-  }
+//   componentDidUpdate(){
+//     // mdlCleanUp()
+//     componentHandler.upgradeElement(this.refs.mdlWrapper)
+//   }
 
-  render() {
-    return <div
-    className="mdl-textfield mdl-js-textfield mdl-textfield--floating-label"
-    ref="mdlWrapper"
-      >
-      <label
-    className="mdl-textfield__label"
-    htmlFor="vertex-gid-input"
-      >Enter a gene name</label>
-      <input
-    id="gene-response-input"
-    type="text"
-    name="gene"
-    className="mdl-textfield__input"
-    onChange={e => this.props.onChange(e.target.value)}
-    value={this.props.value}
-      />
-      </div>
-  }
-}
+//   render() {
+//     return <div
+//     className="mdl-textfield mdl-js-textfield mdl-textfield--floating-label"
+//     ref="mdlWrapper"
+//       >
+//       <label
+//     className="mdl-textfield__label"
+//     htmlFor="vertex-gid-input"
+//       >Enter a gene name</label>
+//       <input
+//     id="gene-response-input"
+//     type="text"
+//     name="gene"
+//     className="mdl-textfield__input"
+//     onChange={e => this.props.onChange(e.target.value)}
+//     value={this.props.value}
+//       />
+//       </div>
+//   }
+// }
 
-class DrugSelect extends Component {
-  constructor(props) {
-    super(props)
-    this.fetchCompounds = queries.cohortCompounds(props.cohort)
-    this.state = {
-      drugs: [],
-      selected: "",
-      loaded: false
-    }
-  }
+// class DrugSelect extends Component {
+//   constructor(props) {
+//     super(props)
+//     this.fetchCompounds = queries.cohortCompounds(props.cohort)
+//     this.state = {
+//       drugs: [],
+//       selected: "",
+//       loaded: false
+//     }
+//   }
 
-  componentDidMount() {
-    console.log(this.props)
-    var self = this
-    this.fetchCompounds(function(drugs) {
-      var plain = drugs.map(function(drug) {return drug.slice(9)}).sort()
-      console.log(plain)
-      self.setState({drugs: plain, loaded: true, selected: plain[0]})
-      self.props.selectDrug(plain[0])
-    })
-  }
+//   componentDidMount() {
+//     console.log(this.props)
+//     var self = this
+//     this.fetchCompounds(function(drugs) {
+//       var plain = drugs.map(function(drug) {return drug.slice(9)}).sort()
+//       console.log(plain)
+//       self.setState({drugs: plain, loaded: true, selected: plain[0]})
+//       self.props.selectDrug(plain[0])
+//     })
+//   }
 
-  selectDrug(event) {
-    var drug = event.target.value
-    this.setState({selected: drug})
-    this.props.selectDrug(drug)
-  }
+//   selectDrug(event) {
+//     var drug = event.target.value
+//     this.setState({selected: drug})
+//     this.props.selectDrug(drug)
+//   }
 
-  render() {
-    if (this.state.loaded) {
-      var drugOptions = this.state.drugs.map(function(drug) {
-        return <option value={drug} key={drug}>{drug}</option>
-      })
+//   render() {
+//     if (this.state.loaded) {
+//       var drugOptions = this.state.drugs.map(function(drug) {
+//         return <option value={drug} key={drug}>{drug}</option>
+//       })
 
-      return (
-          <div>
-          <label className="label-block">Then choose a drug</label>
-          <select value={this.state.selected} onChange={this.selectDrug.bind(this)}>
-          {drugOptions}
-        </select>
-          </div>
-      )
-    } else {
-      return <div>loading compounds....</div>
-    }
-  }
-}
+//       return (
+//           <div>
+//           <label className="label-block">Then choose a drug</label>
+//           <select value={this.state.selected} onChange={this.selectDrug.bind(this)}>
+//           {drugOptions}
+//         </select>
+//           </div>
+//       )
+//     } else {
+//       return <div>loading compounds....</div>
+//     }
+//   }
+// }
 
-class DrugResponse extends Component {
-  constructor(props) {
-    super(props)
-    this.fetchSamples = queries.cohortGids(props.cohort)
-    this.state = {
-      loaded: false,
-      samples: [],
-      mutants: [],
-      normals: [],
-      mutantResponses: [],
-      normalResponses: [],
-      drug: "",
-      input: ""
-    }
-  }
+// class DrugResponse extends Component {
+//   constructor(props) {
+//     super(props)
+//     this.fetchSamples = queries.cohortGids(props.cohort)
+//     this.state = {
+//       loaded: false,
+//       samples: [],
+//       mutants: [],
+//       normals: [],
+//       mutantResponses: [],
+//       normalResponses: [],
+//       drug: "",
+//       input: ""
+//     }
+//   }
 
-  componentDidMount() {
-    var self = this
-    this.fetchSamples(function(samples) {
-      console.log(samples)
-      self.setState({samples: samples})
-    })
-  }
+//   componentDidMount() {
+//     var self = this
+//     this.fetchSamples(function(samples) {
+//       console.log(samples)
+//       self.setState({samples: samples})
+//     })
+//   }
 
-  selectDrug(drug) {
-    console.log('set drug to ' + drug)
-    this.setState({drug: drug})
-    this.setGene(this.state.input)
-  }
+//   selectDrug(drug) {
+//     console.log('set drug to ' + drug)
+//     this.setState({drug: drug})
+//     this.setGene(this.state.input)
+//   }
 
-  extractResponses(responses) {
-    var rawSummary = responses.filter(function(x, i) {return (i % 2) === 0})
-    var rawValues = responses.filter(function(x, i) {return (i % 2) === 1})
+//   extractResponses(responses) {
+//     var rawSummary = responses.filter(function(x, i) {return (i % 2) === 0})
+//     var rawValues = responses.filter(function(x, i) {return (i % 2) === 1})
 
-    var summary = rawSummary.map(function(mutant) {
-      var response = JSON.parse(mutant)
-      var amax = response.filter(function(r) {return r['type'] === 'AUC'}) // 'EC50'}) // 'AMAX'})
-      if (!_.isEmpty(amax)) {
-        return amax[0]['value']
-      }
-    })
+//     var summary = rawSummary.map(function(mutant) {
+//       var response = JSON.parse(mutant)
+//       var amax = response.filter(function(r) {return r['type'] === 'AUC'}) // 'EC50'}) // 'AMAX'})
+//       if (!_.isEmpty(amax)) {
+//         return amax[0]['value']
+//       }
+//     })
 
-    console.log('values')
-    console.log(rawValues[0])
+//     console.log('values')
+//     console.log(rawValues[0])
 
-    var values = rawValues.map(function(mutant) {
-      var response = JSON.parse(mutant)
-      return response.reduce(function(dimensions, point) {
-        dimensions.x.push(Math.log(point.dose))
-        dimensions.y.push(point.response)
-        return dimensions
-      }, {x: [], y: []})
-    })
+//     var values = rawValues.map(function(mutant) {
+//       var response = JSON.parse(mutant)
+//       return response.reduce(function(dimensions, point) {
+//         dimensions.x.push(Math.log(point.dose))
+//         dimensions.y.push(point.response)
+//         return dimensions
+//       }, {x: [], y: []})
+//     })
 
-    return {
-      summary: summary,
-      values: values
-    }
-  }
+//     return {
+//       summary: summary,
+//       values: values
+//     }
+//   }
 
-  setGene(gene) {
-    console.log(gene)
-    var self = this
-    self.setState({input: gene})
-    queries.geneExists(gene, function(exists) {
-      if (exists) {
-        var fetchMutants = queries.samplesWithMutations(self.props.cohort, gene)
-        fetchMutants(function(mutants) {
-          var normals = _.difference(self.state.samples, mutants)
-          self.setState({mutants: mutants, normals: normals})
-          console.log("mutants: " + mutants.length)
-          console.log("normals: " + normals.length)
+//   setGene(gene) {
+//     console.log(gene)
+//     var self = this
+//     self.setState({input: gene})
+//     queries.geneExists(gene, function(exists) {
+//       if (exists) {
+//         var fetchMutants = queries.samplesWithMutations(self.props.cohort, gene)
+//         fetchMutants(function(mutants) {
+//           var normals = _.difference(self.state.samples, mutants)
+//           self.setState({mutants: mutants, normals: normals})
+//           console.log("mutants: " + mutants.length)
+//           console.log("normals: " + normals.length)
 
-          var drug = self.state.drug // self.refs.drugselect.state.selected
-          var fetchMutantResponses = queries.sampleResponses(mutants, drug)
-          var fetchNormalResponses = queries.sampleResponses(normals, drug)
+//           var drug = self.state.drug // self.refs.drugselect.state.selected
+//           var fetchMutantResponses = queries.sampleResponses(mutants, drug)
+//           var fetchNormalResponses = queries.sampleResponses(normals, drug)
 
-          if (!_.isEmpty(mutants)) {
-            fetchMutantResponses(function(mresponses) {
-              console.log(mresponses)
-              fetchNormalResponses(function(nresponses) {
-                console.log(nresponses)
-                var mutantResponses = self.extractResponses(mresponses)
-                var normalResponses = self.extractResponses(nresponses)
-                console.log(mutantResponses)
-                console.log(normalResponses)
-                self.setState({mutantResponses: mutantResponses, normalResponses: normalResponses})
+//           if (!_.isEmpty(mutants)) {
+//             fetchMutantResponses(function(mresponses) {
+//               console.log(mresponses)
+//               fetchNormalResponses(function(nresponses) {
+//                 console.log(nresponses)
+//                 var mutantResponses = self.extractResponses(mresponses)
+//                 var normalResponses = self.extractResponses(nresponses)
+//                 console.log(mutantResponses)
+//                 console.log(normalResponses)
+//                 self.setState({mutantResponses: mutantResponses, normalResponses: normalResponses})
 
-                Plotly.newPlot(
-                  'response-plot',
-                  [{name: 'mutation samples', y: mutantResponses.summary, type: 'box'},
-                   {name: 'normal samples', y: normalResponses.summary, type: 'box'}]
-                )
+//                 Plotly.newPlot(
+//                   'response-plot',
+//                   [{name: 'mutation samples', y: mutantResponses.summary, type: 'box'},
+//                    {name: 'normal samples', y: normalResponses.summary, type: 'box'}]
+//                 )
 
-                var normalAverage = sampleAverage(normalResponses.values)
-                normalAverage.mode = 'line'
-                normalAverage.name = 'Normals'
-                var mutantAverage = sampleAverage(mutantResponses.values)
-                mutantAverage.mode = 'line'
-                mutantAverage.name = 'Mutations'
+//                 var normalAverage = sampleAverage(normalResponses.values)
+//                 normalAverage.mode = 'line'
+//                 normalAverage.name = 'Normals'
+//                 var mutantAverage = sampleAverage(mutantResponses.values)
+//                 mutantAverage.mode = 'line'
+//                 mutantAverage.name = 'Mutations'
 
-                // var normalCurves = normalResponses.values.map(function(curve) {
-                //   curve.name = "Normal"
-                //   curve.mode = "lines"
-                //   return curve
-                // })
+//                 // var normalCurves = normalResponses.values.map(function(curve) {
+//                 //   curve.name = "Normal"
+//                 //   curve.mode = "lines"
+//                 //   return curve
+//                 // })
 
-                // var mutantCurves = mutantResponses.values.map(function(curve) {
-                //   curve.name = "Mutation"
-                //   curve.mode = "lines"
-                //   return curve
-                // })
+//                 // var mutantCurves = mutantResponses.values.map(function(curve) {
+//                 //   curve.name = "Mutation"
+//                 //   curve.mode = "lines"
+//                 //   return curve
+//                 // })
 
-                Plotly.newPlot(
-                  'curves-plot',
-                  [normalAverage, mutantAverage]
-                  // mutantCurves.concat(normalCurves)
-                )
-              })
-            })
-          }
-        })
-      } else {
-        self.setState({mutants: [], normals: []})
-      }
-    })
-  }
+//                 Plotly.newPlot(
+//                   'curves-plot',
+//                   [normalAverage, mutantAverage]
+//                   // mutantCurves.concat(normalCurves)
+//                 )
+//               })
+//             })
+//           }
+//         })
+//       } else {
+//         self.setState({mutants: [], normals: []})
+//       }
+//     })
+//   }
 
-  render() {
-    return (
-      <div>
-        <span className="informative-header">Drug response for samples with a given mutation vs those without that mutation</span>
-        <GeneInput value={this.state.input} onChange={this.setGene.bind(this)} />
-        <DrugSelect ref="drugselect" cohort={this.props.cohort} selectDrug={this.selectDrug.bind(this)} />
-        <div id="response-plot"></div>
-        <div id="curves-plot"></div>
-        </div>
-    )
-  }
-}
+//   render() {
+//     return (
+//       <div>
+//         <span className="informative-header">Drug response for samples with a given mutation vs those without that mutation</span>
+//         <GeneInput value={this.state.input} onChange={this.setGene.bind(this)} />
+//         <DrugSelect ref="drugselect" cohort={this.props.cohort} selectDrug={this.selectDrug.bind(this)} />
+//         <div id="response-plot"></div>
+//         <div id="curves-plot"></div>
+//         </div>
+//     )
+//   }
+// }
 
 
 
@@ -850,304 +855,304 @@ class DrugResponse extends Component {
 ///// VERTEX VIEWER
 //////////////////////////////
 
-var snipPrefix = function(s) {
-  return s.substring(s.indexOf(':') + 1)
-}
+// var snipPrefix = function(s) {
+//   return s.substring(s.indexOf(':') + 1)
+// }
 
-function getParameterByName(name, url) {
-  if (!url) {
-    url = window.location.href
-  }
-  name = name.replace(/[\[\]]/g, "\\$&")
-  var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-      results = regex.exec(url)
-  if (!results) return null
-  if (!results[2]) return ''
-  return decodeURIComponent(results[2].replace(/\+/g, " "))
-}
+// function getParameterByName(name, url) {
+//   if (!url) {
+//     url = window.location.href
+//   }
+//   name = name.replace(/[\[\]]/g, "\\$&")
+//   var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+//       results = regex.exec(url)
+//   if (!results) return null
+//   if (!results[2]) return ''
+//   return decodeURIComponent(results[2].replace(/\+/g, " "))
+// }
 
-var VertexEdges = React.createClass({
-  getInitialState: function() {
-    return {}
-  },
+// var VertexEdges = React.createClass({
+//   getInitialState: function() {
+//     return {}
+//   },
 
-  render: function() {
-    var props = this.props
-    var prefix = props.edges[0].split(':')[0]
-    var header = <span>{props.label + ' '}<span className="edge-direction">({props.direction} {prefix})</span></span>
+//   render: function() {
+//     var props = this.props
+//     var prefix = props.edges[0].split(':')[0]
+//     var header = <span>{props.label + ' '}<span className="edge-direction">({props.direction} {prefix})</span></span>
 
-    var items = props.edges.map(gid => (
-        <ExpandoItem key={gid}>
-        <a onClick={() => props.navigate(gid)}>{snipPrefix(gid)}</a>
-        </ExpandoItem>
-    ))
+//     var items = props.edges.map(gid => (
+//         <ExpandoItem key={gid}>
+//         <a onClick={() => props.navigate(gid)}>{snipPrefix(gid)}</a>
+//         </ExpandoItem>
+//     ))
 
-    return <Expando header={header}>{items}</Expando>
-  }
-})
+//     return <Expando header={header}>{items}</Expando>
+//   }
+// })
 
-function PropertyRow(props) {
-  var value = props.value
-  if (_.isArray(value)) {
-    value = JSON.stringify(value)
-  } else if (_.isObject(value)) {
-    value = JSON.stringify(value)
-  }
+// function PropertyRow(props) {
+//   var value = props.value
+//   if (_.isArray(value)) {
+//     value = JSON.stringify(value)
+//   } else if (_.isObject(value)) {
+//     value = JSON.stringify(value)
+//   }
 
-  return (<tr>
-          <td className="prop-key mdl-data-table__cell--non-numeric">{props.name}</td>
-          <td className="mdl-data-table__cell--non-numeric">{value}</td>
-          </tr>)
-}
+//   return (<tr>
+//           <td className="prop-key mdl-data-table__cell--non-numeric">{props.name}</td>
+//           <td className="mdl-data-table__cell--non-numeric">{value}</td>
+//           </tr>)
+// }
 
-var PropertiesView = function(props) {
-  var properties = Object.keys(props.vertex.properties).map(function(key) {
-    var v = props.vertex.properties[key]
-    return <PropertyRow key={key} name={key} value={v} />
-  })
+// var PropertiesView = function(props) {
+//   var properties = Object.keys(props.vertex.properties).map(function(key) {
+//     var v = props.vertex.properties[key]
+//     return <PropertyRow key={key} name={key} value={v} />
+//   })
 
-  return (
-      <div>
-      <div className="vertex-properties">
-      <table
-    className="prop-table mdl-data-table mdl-js-data-table mdl-data-table--selectable mdl-shad--2dp"
-      ><tbody>
-      {properties}
-    </tbody></table>
-      </div>
-      </div>
-  )
-}
+//   return (
+//       <div>
+//       <div className="vertex-properties">
+//       <table
+//     className="prop-table mdl-data-table mdl-js-data-table mdl-data-table--selectable mdl-shad--2dp"
+//       ><tbody>
+//       {properties}
+//     </tbody></table>
+//       </div>
+//       </div>
+//   )
+// }
 
-var EdgesView = function(props) {
-  console.log(props)
-  var inEdges = Object.keys(props.vertex['in'])
-  // Filter out edges with "hasInstance" in label
-      .filter(key => key != 'hasInstance')
-      .map(function(key) {
-        return <VertexEdges
-        key={key}
-        label={key}
-        navigate={props.navigate}
-        edges={props.vertex['in'][key]}
-        direction="from"
-          />
-      })
-  var outEdges = Object.keys(props.vertex['out'])
-  // Filter out edges with "hasInstance" in label
-      .filter(key => key != 'hasInstance')
-      .map(function(key) {
-        return <VertexEdges
-        key={key}
-        label={key}
-        navigate={props.navigate}
-        edges={props.vertex['out'][key]}
-        direction="to"
-          />
-      })
+// var EdgesView = function(props) {
+//   console.log(props)
+//   var inEdges = Object.keys(props.vertex['in'])
+//   // Filter out edges with "hasInstance" in label
+//       .filter(key => key != 'hasInstance')
+//       .map(function(key) {
+//         return <VertexEdges
+//         key={key}
+//         label={key}
+//         navigate={props.navigate}
+//         edges={props.vertex['in'][key]}
+//         direction="from"
+//           />
+//       })
+//   var outEdges = Object.keys(props.vertex['out'])
+//   // Filter out edges with "hasInstance" in label
+//       .filter(key => key != 'hasInstance')
+//       .map(function(key) {
+//         return <VertexEdges
+//         key={key}
+//         label={key}
+//         navigate={props.navigate}
+//         edges={props.vertex['out'][key]}
+//         direction="to"
+//           />
+//       })
 
-  return (
-      <div>
-      <div className="vertex-edges-wrapper">
-      <div className="vertex-in-edges vertex-edges">
-      <h4>In Edges</h4>
-      {inEdges}
-    </div>
-      <div className="vertex-out-edges vertex-edges">
-      <h4>Out Edges</h4>
-      {outEdges}
-    </div>
-      </div>
-      </div>
-  )
-}
+//   return (
+//       <div>
+//       <div className="vertex-edges-wrapper">
+//       <div className="vertex-in-edges vertex-edges">
+//       <h4>In Edges</h4>
+//       {inEdges}
+//     </div>
+//       <div className="vertex-out-edges vertex-edges">
+//       <h4>Out Edges</h4>
+//       {outEdges}
+//     </div>
+//       </div>
+//       </div>
+//   )
+// }
 
-var VertexInput = React.createClass({
-  componentDidMount() {
-    componentHandler.upgradeElement(this.refs.mdlWrapper)
-    mdlCleanUp()
-  },
+// var VertexInput = React.createClass({
+//   componentDidMount() {
+//     componentHandler.upgradeElement(this.refs.mdlWrapper)
+//     mdlCleanUp()
+//   },
 
-  componentDidUpdate() {
-    componentHandler.upgradeElement(this.refs.mdlWrapper)
-    mdlCleanUp()
-  },
+//   componentDidUpdate() {
+//     componentHandler.upgradeElement(this.refs.mdlWrapper)
+//     mdlCleanUp()
+//   },
 
-  render() {
-    return <div
-    className="mdl-textfield mdl-js-textfield mdl-textfield--floating-label"
-    ref="mdlWrapper"
-      >
-      <label
-    className="mdl-textfield__label"
-    htmlFor="vertex-gid-input"
-      >Enter a vertex GID</label>
-      <input
-    id="vertex-gid-input"
-    type="text"
-    name="gid"
-    className="mdl-textfield__input"
-    onChange={e => this.props.onChange(e.target.value)}
-    value={this.props.value}
-      />
-      </div>
-  },
-})
+//   render() {
+//     return <div
+//     className="mdl-textfield mdl-js-textfield mdl-textfield--floating-label"
+//     ref="mdlWrapper"
+//       >
+//       <label
+//     className="mdl-textfield__label"
+//     htmlFor="vertex-gid-input"
+//       >Enter a vertex GID</label>
+//       <input
+//     id="vertex-gid-input"
+//     type="text"
+//     name="gid"
+//     className="mdl-textfield__input"
+//     onChange={e => this.props.onChange(e.target.value)}
+//     value={this.props.value}
+//       />
+//       </div>
+//   },
+// })
 
-var Expando = React.createClass({
-  getInitialState() {
-    return {
-      collapsed: true,
-    }
-  },
-  componentDidMount() {
-    var content = document.getElementById(this.refs.content)
-    if (content) {
-      content.css('margin-top', -content.height())
-    }
-  },
-  onClick() {
-    this.setState({collapsed: !this.state.collapsed})
-  },
-  render() {
-    var props = this.props
-    var rootClassName = classNames("expando", "mdl-collapse", "mdl-navigation", {
-      "mdl-collapse--opened": !this.state.collapsed,
-    })
+// var Expando = React.createClass({
+//   getInitialState() {
+//     return {
+//       collapsed: true,
+//     }
+//   },
+//   componentDidMount() {
+//     var content = document.getElementById(this.refs.content)
+//     if (content) {
+//       content.css('margin-top', -content.height())
+//     }
+//   },
+//   onClick() {
+//     this.setState({collapsed: !this.state.collapsed})
+//   },
+//   render() {
+//     var props = this.props
+//     var rootClassName = classNames("expando", "mdl-collapse", "mdl-navigation", {
+//       "mdl-collapse--opened": !this.state.collapsed,
+//     })
     
-    return (<div className={rootClassName}>
-            <a className="mdl-navigation__link mdl-collapse__button expando-header" onClick={this.onClick}>
-            <i className="material-icons mdl-collapse__icon mdl-animation--default">expand_more</i>
-            {props.header}
-            </a>
-            <div className="mdl-collapse__content-wrapper expando-content">
-            <div className="mdl-collapse__content mdl-animation--default" ref="content">
-            {props.children}
-            </div>
-            </div>
-            </div>)
-  }
-})
+//     return (<div className={rootClassName}>
+//             <a className="mdl-navigation__link mdl-collapse__button expando-header" onClick={this.onClick}>
+//             <i className="material-icons mdl-collapse__icon mdl-animation--default">expand_more</i>
+//             {props.header}
+//             </a>
+//             <div className="mdl-collapse__content-wrapper expando-content">
+//             <div className="mdl-collapse__content mdl-animation--default" ref="content">
+//             {props.children}
+//             </div>
+//             </div>
+//             </div>)
+//   }
+// })
 
-function ExpandoItem(props) {
-  return <span className="mdl-navigation__link">{props.children}</span>
-}
+// function ExpandoItem(props) {
+//   return <span className="mdl-navigation__link">{props.children}</span>
+// }
 
-function extractLabel(label) {
-  var front = label.split(':')[0]
-  return front.charAt(0).toUpperCase() + front.slice(1)
-}
+// function extractLabel(label) {
+//   var front = label.split(':')[0]
+//   return front.charAt(0).toUpperCase() + front.slice(1)
+// }
 
-function fetchVertex(gid, callback) {
-  fetch("/vertex/find/" + gid).then(function(response) {return response.json()}).then(callback)
-}
+// function fetchVertex(gid, callback) {
+//   fetch("/vertex/find/" + gid).then(function(response) {return response.json()}).then(callback)
+// }
 
-var VertexViewer = React.createClass({
-  getInitialState() {
-    return {
-      input: this.getGIDFromURL(),
-      loading: false,
-      error: "",
-      vertex: {},
-    }
-  },
+// var VertexViewer = React.createClass({
+//   getInitialState() {
+//     return {
+//       input: this.getGIDFromURL(),
+//       loading: false,
+//       error: "",
+//       vertex: {},
+//     }
+//   },
 
-  getGIDFromURL() {
-    return getParameterByName("gid") || ""
-  },
+//   getGIDFromURL() {
+//     return getParameterByName("gid") || ""
+//   },
 
-  componentDidMount() {
-    window.onpopstate = this.onPopState
-    var gid = this.props.input
-    if (gid) {
-      // if (this.state.input) {
-      this.setVertex(gid, true)
-      history.pushState({gid: gid}, "Vertex: " + gid, '?gid=' + gid)
-    }
-  },
+//   componentDidMount() {
+//     window.onpopstate = this.onPopState
+//     var gid = this.props.input
+//     if (gid) {
+//       // if (this.state.input) {
+//       this.setVertex(gid, true)
+//       history.pushState({gid: gid}, "Vertex: " + gid, '?gid=' + gid)
+//     }
+//   },
 
-  onPopState(e) {
-    var hash = this.getGIDFromURL()
-    if (e.state && e.state.gid) {
-      this.setVertex(e.state.gid, true)
-    } else if (hash) {
-      this.setVertex(hash, true)
-    } else {
-      this.setVertex()
-    }
-  },
+//   onPopState(e) {
+//     var hash = this.getGIDFromURL()
+//     if (e.state && e.state.gid) {
+//       this.setVertex(e.state.gid, true)
+//     } else if (hash) {
+//       this.setVertex(hash, true)
+//     } else {
+//       this.setVertex()
+//     }
+//   },
 
-  setVertex(gid, nopushstate) {
-    if (!gid) {
-      this.setState({vertex: {}, error: "", input: ""})
-    } else {
-      var we = this
-      this.setState({input: gid, loading: true, error: ""})
-      fetchVertex(gid, function(result) {
-        if (Object.keys(result).length > 0) {
-          // we.setState({input: gid, vertex: result, loading: false, error: ""})
-          we.setState({vertex: result, loading: false, error: ""})
-          if (!nopushstate) {
-            history.pushState({gid: gid}, "Vertex: " + gid, '?gid=' + gid)
-          }
-        } else {
-          we.setState({vertex: {}, loading: false, error: ""})
-        }
-      })
-    }
-  },
+//   setVertex(gid, nopushstate) {
+//     if (!gid) {
+//       this.setState({vertex: {}, error: "", input: ""})
+//     } else {
+//       var we = this
+//       this.setState({input: gid, loading: true, error: ""})
+//       fetchVertex(gid, function(result) {
+//         if (Object.keys(result).length > 0) {
+//           // we.setState({input: gid, vertex: result, loading: false, error: ""})
+//           we.setState({vertex: result, loading: false, error: ""})
+//           if (!nopushstate) {
+//             history.pushState({gid: gid}, "Vertex: " + gid, '?gid=' + gid)
+//           }
+//         } else {
+//           we.setState({vertex: {}, loading: false, error: ""})
+//         }
+//       })
+//     }
+//   },
 
-  render: function() {
-    var loading = ""
-    var we = this
-    if (this.state.loading) {
-      loading = <img src="/static/ripple.gif" width="50px" />
-    }
+//   render: function() {
+//     var loading = ""
+//     var we = this
+//     if (this.state.loading) {
+//       loading = <img src="/static/ripple.gif" width="50px" />
+//     }
 
-    var error
-    if (this.state.error) {
-      error = <div>Request error: {this.state.error}</div>
-    }
+//     var error
+//     if (this.state.error) {
+//       error = <div>Request error: {this.state.error}</div>
+//     }
 
-    var emptyMessage = ""
-    if (this.state.input) {
-      emptyMessage = "No vertex found"
-    }
+//     var emptyMessage = ""
+//     if (this.state.input) {
+//       emptyMessage = "No vertex found"
+//     }
 
-    var spacing = <div key="spacing" className="spacing"></div>
+//     var spacing = <div key="spacing" className="spacing"></div>
 
-    var properties = <div className="empty-vertex">{emptyMessage}</div>
-    var visualizations = []
+//     var properties = <div className="empty-vertex">{emptyMessage}</div>
+//     var visualizations = []
 
-    if (this.state.vertex.properties) {
-      properties = (<div><PropertiesView vertex={this.state.vertex} /><EdgesView vertex={this.state.vertex} navigate={this.setVertex} /></div>)
+//     if (this.state.vertex.properties) {
+//       properties = (<div><PropertiesView vertex={this.state.vertex} /><EdgesView vertex={this.state.vertex} navigate={this.setVertex} /></div>)
 
-      if (this.props.visualizations) {
-        var label = this.state.vertex.type || this.state.vertex.properties.label || this.state.vertex.properties['#label'] || this.state.vertex.properties.type || extractLabel(this.state.vertex.properties.gid)
-        console.log("label: " + label)
-        if (this.props.visualizations[label]) {
-          console.log("visualizations found: " + this.props.visualizations[label].length)
-          visualizations = visualizations.concat(this.props.visualizations[label].map(function(visualization) {
-            return visualization(we.state.vertex)
-          }))
-        }
-      }
-    }
+//       if (this.props.visualizations) {
+//         var label = this.state.vertex.type || this.state.vertex.properties.label || this.state.vertex.properties['#label'] || this.state.vertex.properties.type || extractLabel(this.state.vertex.properties.gid)
+//         console.log("label: " + label)
+//         if (this.props.visualizations[label]) {
+//           console.log("visualizations found: " + this.props.visualizations[label].length)
+//           visualizations = visualizations.concat(this.props.visualizations[label].map(function(visualization) {
+//             return visualization(we.state.vertex)
+//           }))
+//         }
+//       }
+//     }
 
-    console.log("generated: " + visualizations.length)
+//     console.log("generated: " + visualizations.length)
 
-    return (
-        <div>
-        <VertexInput onChange={this.setVertex} value={this.state.input} />
-        {loading}
-      {visualizations}
-      {error}
-      {spacing}
-      {properties}
-      </div>
-    )
-  }
-})
+//     return (
+//         <div>
+//         <VertexInput onChange={this.setVertex} value={this.state.input} />
+//         {loading}
+//       {visualizations}
+//       {error}
+//       {spacing}
+//       {properties}
+//       </div>
+//     )
+//   }
+// })
 
 
 
@@ -1187,158 +1192,158 @@ var VertexViewer = React.createClass({
 ///// SCHEMA
 //////////////////////////////
 
-function schemaToCytoscape(schema) {
-  if (_.isEmpty(schema)) {
-    return {nodes: [], edges: []}
-  } else {
-    console.log(schema)
-    var nodes = Object.keys(schema['vertexes']).map(function(key) {
-      var vertex = schema['vertexes'][key]
-      return {data: {id: vertex.gid, name: vertex.label}}
-    })
+// function schemaToCytoscape(schema) {
+//   if (_.isEmpty(schema)) {
+//     return {nodes: [], edges: []}
+//   } else {
+//     console.log(schema)
+//     var nodes = Object.keys(schema['vertexes']).map(function(key) {
+//       var vertex = schema['vertexes'][key]
+//       return {data: {id: vertex.gid, name: vertex.label}}
+//     })
     
-    var edges = _.flatten(Object.keys(schema['in']).map(function(key) {
-      return schema['in'][key].map(function(edge) {
-        return {data: {source: edge['in'], target: edge['out'], label: edge['label']}}
-      })
-    }))
+//     var edges = _.flatten(Object.keys(schema['in']).map(function(key) {
+//       return schema['in'][key].map(function(edge) {
+//         return {data: {source: edge['in'], target: edge['out'], label: edge['label']}}
+//       })
+//     }))
 
-    return {
-      nodes: nodes,
-      edges: edges
-    }
-  }
-}
+//     return {
+//       nodes: nodes,
+//       edges: edges
+//     }
+//   }
+// }
 
-class SchemaGraph extends Component {
-  constructor(props){
-    super(props)
-    this.renderCytoscape = this.renderCytoscape.bind(this)
-  }
+// class SchemaGraph extends Component {
+//   constructor(props){
+//     super(props)
+//     this.renderCytoscape = this.renderCytoscape.bind(this)
+//   }
 
-  renderCytoscape() {
-    console.log('rendering schema')
-    var nodeColor = '#594346'
-    var nodeText = '#ffffff'
-    var edgeColor = '#f22f08'
-    var edgeText = '#ffffff'
+//   renderCytoscape() {
+//     console.log('rendering schema')
+//     var nodeColor = '#594346'
+//     var nodeText = '#ffffff'
+//     var edgeColor = '#f22f08'
+//     var edgeText = '#ffffff'
 
-    var cyelement = this.refs.cytoscape
-    this.cy = cytoscape({
-      container: cyelement,
-      // container: document.getElementById('cy'),
-      boxSelectionEnabled: false,
-      autounselectify: true,
+//     var cyelement = this.refs.cytoscape
+//     this.cy = cytoscape({
+//       container: cyelement,
+//       // container: document.getElementById('cy'),
+//       boxSelectionEnabled: false,
+//       autounselectify: true,
 
-      style: cytoscape.stylesheet()
-        .selector('node')
-        .css({
-          'content': 'data(name)',
-          'height': 80,
-          'width': 80,
-          'background-fit': 'cover',
-          'background-color': nodeColor,
-          // 'border-color': '#000',
-          // 'border-width': 3,
-          // 'border-opacity': 0.5,
-          // 'shape': 'roundrectangle',
-          'color': nodeText,
-          'font-family': '"Lucida Sans Unicode", "Lucida Grande", sans-serif',
-          'font-size': 24,
-          'text-outline-color': nodeColor,
-          'text-outline-width': 3,
-          'text-valign': 'center'
-        })
+//       style: cytoscape.stylesheet()
+//         .selector('node')
+//         .css({
+//           'content': 'data(name)',
+//           'height': 80,
+//           'width': 80,
+//           'background-fit': 'cover',
+//           'background-color': nodeColor,
+//           // 'border-color': '#000',
+//           // 'border-width': 3,
+//           // 'border-opacity': 0.5,
+//           // 'shape': 'roundrectangle',
+//           'color': nodeText,
+//           'font-family': '"Lucida Sans Unicode", "Lucida Grande", sans-serif',
+//           'font-size': 24,
+//           'text-outline-color': nodeColor,
+//           'text-outline-width': 3,
+//           'text-valign': 'center'
+//         })
 
-        .selector('edge')
-        .css({
-          'content': 'data(label)',
-          'width': 6,
-          'edge-text-rotation': 'autorotate',
-          'target-arrow-shape': 'triangle',
-          'line-color': edgeColor,
-          'target-arrow-color': edgeColor,
-          'curve-style': 'bezier',
-          'color': edgeText,
-          'font-size': 18,
-          'text-outline-color': edgeColor,
-          'text-outline-width': 2,
-        }),
+//         .selector('edge')
+//         .css({
+//           'content': 'data(label)',
+//           'width': 6,
+//           'edge-text-rotation': 'autorotate',
+//           'target-arrow-shape': 'triangle',
+//           'line-color': edgeColor,
+//           'target-arrow-color': edgeColor,
+//           'curve-style': 'bezier',
+//           'color': edgeText,
+//           'font-size': 18,
+//           'text-outline-color': edgeColor,
+//           'text-outline-width': 2,
+//         }),
 
-      elements: schemaToCytoscape(this.props.schema)
-    })
+//       elements: schemaToCytoscape(this.props.schema)
+//     })
 
-    this.layout = this.cy.makeLayout({
-      name: 'cose' // ,
-      // animate: true,
-      // padding: 30,
-      // animationThreshold: 250,
-      // refresh: 20
-    })
-  }
+//     this.layout = this.cy.makeLayout({
+//       name: 'cose' // ,
+//       // animate: true,
+//       // padding: 30,
+//       // animationThreshold: 250,
+//       // refresh: 20
+//     })
+//   }
 
-  componentDidMount() {
-    this.renderCytoscape()
-    this.runLayout()
-  }
+//   componentDidMount() {
+//     this.renderCytoscape()
+//     this.runLayout()
+//   }
 
-  shouldComponentUpdate() {
-    return false
-  }  
+//   shouldComponentUpdate() {
+//     return false
+//   }  
 
-  componentWillReceiveProps(props) {
-    var next = schemaToCytoscape(props.schema)
-    this.cy.json(next)
-    this.renderCytoscape()
-    this.runLayout()
-  }
+//   componentWillReceiveProps(props) {
+//     var next = schemaToCytoscape(props.schema)
+//     this.cy.json(next)
+//     this.renderCytoscape()
+//     this.runLayout()
+//   }
 
-  componentWillUnmount() {
-    this.cy.destroy()
-  }
+//   componentWillUnmount() {
+//     this.cy.destroy()
+//   }
 
-  runLayout() {
-    this.layout.run()
-  }
+//   runLayout() {
+//     this.layout.run()
+//   }
 
-  cytoscape() {
-    return this.cy
-  }
+//   cytoscape() {
+//     return this.cy
+//   }
 
-  render(){
-    let containerStyle = {
-      height: this.props.height || '1000px',
-      width: this.props.width || '1000px'
-    }
+//   render(){
+//     let containerStyle = {
+//       height: this.props.height || '1000px',
+//       width: this.props.width || '1000px'
+//     }
 
-    return(
-        <div>
-        <div id="cy" style={containerStyle} ref="cytoscape" />
-        </div>
-    )
-  }
-}
-
-
+//     return(
+//         <div>
+//         <div id="cy" style={containerStyle} ref="cytoscape" />
+//         </div>
+//     )
+//   }
+// }
 
 
 
 
-function urlParams() {
-  var params = {}
-  var match,
-      pl     = /\+/g,  // Regex for replacing addition symbol with a space
-      search = /([^&=]+)=?([^&]*)/g,
-      decode = function (s) { return decodeURIComponent(s.replace(pl, " ")) },
-      query  = window.location.search.substring(1)
 
-  while (match = search.exec(query)) {
-    console.log("match found " + match[1] + "," + match[2])
-    params[decode(match[1])] = decode(match[2])
-  }
 
-  return params
-}
+// function urlParams() {
+//   var params = {}
+//   var match,
+//       pl     = /\+/g,  // Regex for replacing addition symbol with a space
+//       search = /([^&=]+)=?([^&]*)/g,
+//       decode = function (s) { return decodeURIComponent(s.replace(pl, " ")) },
+//       query  = window.location.search.substring(1)
+
+//   while (match = search.exec(query)) {
+//     console.log("match found " + match[1] + "," + match[2])
+//     params[decode(match[1])] = decode(match[2])
+//   }
+
+//   return params
+// }
 
 
 
@@ -1443,11 +1448,6 @@ function schemaViewer(router) {
   render(<SchemaViewer width={width} height={height} schema={schema} />, document.getElementById('vertex-explore'))
 }
 
-function drugResponse(router) {
-  var drugs = ["yellow", "green", "cerise", "blue"]
-  render(<DrugResponse cohort={"CCLE"} />, document.getElementById('vertex-explore'))
-}
-
 function initialize() {
   // var router = new Navigo(null, false)
 
@@ -1461,11 +1461,6 @@ function initialize() {
 
   console.log(document.getElementById('vertex-explore'))
   schemaViewer()
-  // drugResponse()
 }
 
 window.onload = function() { initialize() }
-
-export {
-  queries
-}
