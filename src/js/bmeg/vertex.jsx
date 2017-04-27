@@ -283,6 +283,14 @@ function OphionQuery(parent) {
   return operations
 }
 
+function parseJson(s) {
+  try {
+    return JSON.parse(s)
+  } catch(err) {
+    return s
+  }
+}
+
 function Ophion() {
   var queryBase = '/vertex/query'
 
@@ -293,8 +301,17 @@ function Ophion() {
         headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
         body: JSON.stringify(query),
       }).then(function(response) {
-        return response.json()
-      }).then(callback)
+        // console.log(response)
+        return response.text()
+      }).then(function(text) {
+        console.log(text)
+        var lines = text.replace(/^\s+|\s+$/g, '').split("\n")
+        console.log(lines.length)
+        var parsed = lines.map(parseJson)
+        console.log(parsed.length)
+        callback(parsed)
+        // return response.json()
+      }) //.then(callback)
     },
 
     query: function() {
@@ -396,7 +413,7 @@ var queries = {
     return function(callback) {
       O.query().has("gid", "gene:" + gene).incoming("affectsGene").outgoing("termFor").groupCount("variant").execute(function(result) {
         console.log(result)
-        callback(result.result[0])
+        callback(result)
       })
     }
   },
@@ -405,7 +422,7 @@ var queries = {
     return function(callback) {
       O.query().has("gid", "gene:" + gene).incoming("affectsGene").incoming("transcriptEffectOf").outgoing("annotationFor").outgoing("inCallSet").outgoing("callsFor").outgoing("diseaseOf").groupCount("term").execute(function(result) {
         console.log(result)
-        callback(result.result[0])
+        callback(result)
       })
     }
   },
@@ -413,7 +430,7 @@ var queries = {
   geneExists: function(gene, callback) {
     O.query().has("gid", "gene:" + gene).execute(function(result) {
       console.log(result)
-      callback(!_.isEmpty(result.result))
+      callback(!_.isEmpty(result))
     })
   },
 
@@ -423,16 +440,17 @@ var queries = {
         // O.query().has("gid", ["cohort:" + cohort]).outgoing("hasMember").incoming("responseOf").outgoing("responseTo").dedup().values(["gid"]).execute(function(result) {
         
         console.log(result)
-        callback(result.result)
+        callback(result)
       })
     }
   },
 
   cohortGids: function(cohort) {
     return function(callback) {
-      O.query().has("gid", "cohort:" + cohort).outgoing("hasMember").mark("a").incoming("callsFor").select(["a"]).values(["gid"]).execute(function(result) {
+      // O.query().has("gid", "cohort:" + cohort).outgoing("hasSample").mark("a").incoming("callsFor").select(["a"]).values(["gid"]).execute(function(result) {
+      O.query().has("gid", "cohort:" + cohort).outgoing("hasSample").values(["gid"]).execute(function(result) {
         console.log(result)
-        callback(result.result)
+        callback(result)
       })
     }
   },
@@ -441,7 +459,7 @@ var queries = {
     return function(callback) {
       O.query().has("gid", "gene:" + gene).incoming("affectsGene").incoming("transcriptEffectOf").outgoing("annotationFor").outgoing("inCallSet").outgoing("callsFor").mark("a").incoming("hasMember").has("gid", "cohort:" + cohort).select(["a"]).values(["gid"]).execute(function(result) {
         console.log(result)
-        callback(result.result)
+        callback(result)
       })
     }
   },
@@ -450,7 +468,7 @@ var queries = {
     return function(callback) {
       O.query().has("gid", 'compound:' + drug).incoming("responseTo").mark('a').outgoing('responseOf').has("gid", O.within(samples)).select(['a']).values(['responseSummary', 'responseValues']).execute(function(result) {
         console.log(result)
-        callback(result.result)
+        callback(result)
       })
     }
   },
@@ -460,7 +478,7 @@ var queries = {
       O.query().has("gid", "cohort:" + cohort).outgoing("hasMember").incoming("cnaCallsFor").incoming("inCNACallSet").outgoing("calledInGene").execute()
       // group by gene symbol, average cna value
       console.log(result)
-      callback(result.result)
+      callback(result)
     }
   }
 }
@@ -1125,7 +1143,7 @@ var VertexViewer = React.createClass({
       properties = (<div><PropertiesView vertex={this.state.vertex} /><EdgesView vertex={this.state.vertex} navigate={this.setVertex} /></div>)
 
       if (this.props.visualizations) {
-        var label = this.state.vertex.type || this.state.vertex.properties.label || this.state.vertex.properties['#label'] || this.state.vertex.properties.type || extractLabel(this.state.vertex.properties.gid)
+        var label = this.state.vertex.label || this.state.vertex.properties.label || this.state.vertex.properties['#label'] || this.state.vertex.properties.type || extractLabel(this.state.vertex.gid)
         console.log("label: " + label)
         if (this.props.visualizations[label]) {
           console.log("visualizations found: " + this.props.visualizations[label].length)
@@ -1384,7 +1402,7 @@ class SchemaViewer extends Component {
         var query = queries.firstVertex(label)
         query(function(result) {
           console.log(result)
-          self.setState({schema: self.state.schema, label: label.toLowerCase(), gid: result.properties.gid})
+          self.setState({schema: self.state.schema, label: label.toLowerCase(), gid: result.gid})
         })
       }
     }
