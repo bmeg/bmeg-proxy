@@ -411,7 +411,7 @@ var queries = {
   variantTypeCounts: function(gene) {
     return function(callback) {
       // O.query().has("gid", "gene:" + gene).incoming("affectsGene").outgoing("termFor").groupCount("variant").execute(function(result) {
-      O.query().has("gid", "gene:" + gene).incoming("variantInGene").outgoing("termFor").groupCount("variant").execute(function(result) {        
+      O.query().has("gid", "gene:" + gene).incoming("variantInGene").groupCount("term").execute(function(result) {        
         console.log('variantTypeCounts')
         console.log(result)
         callback(result)
@@ -509,8 +509,8 @@ function generateVisualizations() {
   }
 
   return {
-    // 'Gene': [variantTypePie, mutationPie],
-    'Gene': [mutationPie],
+    'Gene': [variantTypePie, mutationPie],
+    // 'Gene': [mutationPie],
     'Pubmed': [pubmedLink],
     'Cohort': [drugResponse]
   }
