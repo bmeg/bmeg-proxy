@@ -411,10 +411,10 @@ var queries = {
   variantTypeCounts: function(gene) {
     return function(callback) {
       // O.query().has("gid", "gene:" + gene).incoming("affectsGene").outgoing("termFor").groupCount("variant").execute(function(result) {
-      O.query().has("gid", "gene:" + gene).incoming("variantInGene").groupCount("term").execute(function(result) {        
+      O.query().has("gid", "gene:" + gene).inEdge("variantInGene").groupCount("term").execute(function(result) {        
         console.log('variantTypeCounts')
         console.log(result)
-        callback(result)
+        callback(result[0])
       })
     }
   },
@@ -553,8 +553,10 @@ var PieChart = React.createClass({
     })
 
     var el = ReactFauxDOM.createElement('svg')
+    var height = Object.keys(data).length * 20
+    height = height < 300 ? 300 : height
     el.setAttribute('width', 800)
-    el.setAttribute('height', Object.keys(data).length * 20)
+    el.setAttribute('height', height)
     
     var pie = d3.pie().value(function(d) {return d.value})
     var slices = pie(cohort)
