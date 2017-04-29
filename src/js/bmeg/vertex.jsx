@@ -140,6 +140,11 @@ var queries = {
         callback(result.result)
       })
     }
+  },
+
+  cnaCallsByGene: function(cohort, gene) {
+    // O.query().has("gid", "cohort:CCLE").outgoing("hasMember").incoming("cnaCallsFor").incoming("inCNACallSet").outgoing("calledInGene").execute()
+    // group by gene symbol, average cna value 
   }
 }
 
@@ -334,7 +339,7 @@ class DrugSelect extends Component {
     console.log(this.props)
     var self = this
     this.fetchCompounds(function(drugs) {
-      var plain = drugs.map(function(drug) {return drug.slice(9)})
+      var plain = drugs.map(function(drug) {return drug.slice(9)}).sort()
       console.log(plain)
       self.setState({drugs: plain, loaded: true, selected: plain[0]})
       self.props.selectDrug(plain[0])
@@ -403,11 +408,11 @@ class DrugResponse extends Component {
 
     var summary = rawSummary.map(function(mutant) {
       var response = JSON.parse(mutant)
-      var amax = response.filter(function(r) {return r['type'] === 'EC50'}) // 'AUC'}) // 'EC50'}) // 'AMAX'})
+      var amax = response.filter(function(r) {return r['type'] === 'AUC'}) // 'EC50'}) // 'AMAX'})
       if (!_.isEmpty(amax)) {
         return amax[0]['value']
       }
-    })// .filter(function(x) {return x && x > -100 && x < 100})
+    })
 
     console.log('values')
     console.log(rawValues[0])
@@ -415,11 +420,11 @@ class DrugResponse extends Component {
     var values = rawValues.map(function(mutant) {
       var response = JSON.parse(mutant)
       return response.reduce(function(dimensions, point) {
-        dimensions.x.push(point.dose)
+        dimensions.x.push(Math.log(point.dose))
         dimensions.y.push(point.response)
         return dimensions
       }, {x: [], y: []})
-    }) // .filter(function(x) {return x && x > -100 && x < 100})
+    })
 
     return {
       summary: summary,
