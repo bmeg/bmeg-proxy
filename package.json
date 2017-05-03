@@ -14,7 +14,7 @@
     "classnames": "2.2.5",
     "cytoscape": "2.7.15",
     "d3": "4.5.0",
-    "datatables.net": "^1.10.13",
+    "datatables.net-select": "^1.2.2",
     "highcharts": "^5.0.10",
     "jquery": "^3.2.1",
     "jsx-loader": "0.13.2",
