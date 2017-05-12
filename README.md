@@ -8,6 +8,10 @@ Then when you navigate to `http://localhost:8080` it will be a local mirror of t
 
 # webpack
 
-To compile the javascript with webpack, type the following command:
+To compile the javascript with webpack, first install npm, then the node modules:
+
+    npm i -S
+
+Then type the following command:
 
     ./node_modules/.bin/webpack -d
