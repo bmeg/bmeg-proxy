@@ -63,7 +63,7 @@ if __name__ == "__main__":
         (r"^/schema/protograph", ProxyHandler, dict(url="%s/schema/protograph" % args.main)),
         (r"^/vertex/find/(.*)", ProxyHandler, dict(url="%s/vertex/find/" % args.main) ),
         (r"^/gaia/gene/(.*)/find/(.*)", ProxyHandler, dict(url="%s/gaia/vertex/find/" % args.main) ),
-        (r"^/(.*)", NoCacheStaticFileHandler, dict(path=SITE_DIR) ),
+        (r"^/(.*)", NoCacheStaticFileHandler, dict(path=SITE_DIR, default_filename="index.html") ),
         #(r"^(.*)", ProxyHandler, dict(url=args.main)),
     ])
 

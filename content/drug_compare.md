@@ -1,7 +1,7 @@
+
 ---
 search: true
-title: Home
-
+title: Response Compare
 javascript:
   - https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js
   - https://fb.me/react-0.14.2.js
@@ -12,4 +12,4 @@ javascript:
 
 ---
 
- <div id="vertex-explore"></div>
+ <DrugResponse key="drug-response" cohort="cohort:CCLE" />
