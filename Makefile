@@ -1,6 +1,7 @@
 
 
 site-build:
+	./node_modules/.bin/webpack -d
 	hugo -d site
 
 server:
