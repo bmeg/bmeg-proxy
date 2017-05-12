@@ -18,6 +18,9 @@ or
 
   apt-get install hugo
   
+# Install python dependencies
+
+  pip install -r requirements.txt
 
 To Build the site:
 
