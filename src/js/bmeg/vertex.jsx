@@ -303,11 +303,8 @@ function Ophion() {
         // console.log(response)
         return response.text()
       }).then(function(text) {
-        console.log(text)
         var lines = text.replace(/^\s+|\s+$/g, '').split("\n")
-        console.log(lines.length)
         var parsed = lines.map(parseJson)
-        console.log(parsed.length)
         callback(parsed)
         // return response.json()
       }) //.then(callback)
@@ -460,7 +457,7 @@ var queries = {
 
   samplesWithMutations: function(cohort, gene) {
     return function(callback) {
-      O.query().has("gid", "gene:" + gene).incoming("variantInGene").outgoing("variantInBiosample").mark("a").incoming("hasSample").has("gid", "cohort:" + cohort).select(["a"]).values(["gid"]).execute(function(result) {
+      O.query().has("gid", "gene:" + gene).incoming("variantInGene").outgoing("variantInBiosample").dedup().mark("a").incoming("hasSample").has("gid", "cohort:" + cohort).select(["a"]).values(["gid"]).execute(function(result) {
         console.log('samplesWithMutations')
         console.log(result)
         callback(result)
@@ -686,7 +683,6 @@ class DrugSelect extends Component {
     var self = this
     this.fetchCompounds(function(drugs) {
       var plain = drugs.map(function(drug) {return drug.slice(9)}).sort()
-      console.log(plain)
       self.setState({drugs: plain, loaded: true, selected: plain[0]})
       self.props.selectDrug(plain[0])
     })
@@ -737,7 +733,6 @@ class DrugResponse extends Component {
   componentDidMount() {
     var self = this
     this.fetchSamples(function(samples) {
-      console.log(samples)
       self.setState({samples: samples})
     })
   }
@@ -808,8 +803,8 @@ class DrugResponse extends Component {
 
                 Plotly.newPlot(
                   'response-plot',
-                  [{name: 'mutation samples', y: mutantResponses.summary, type: 'box'},
-                   {name: 'normal samples', y: normalResponses.summary, type: 'box'}]
+                  [{name: 'normal samples', y: normalResponses.summary, type: 'box'},
+                   {name: 'mutation samples', y: mutantResponses.summary, type: 'box'}]
                 )
 
                 var normalAverage = sampleAverage(normalResponses.values)
@@ -951,7 +946,6 @@ var PropertiesView = function(props) {
 }
 
 var EdgesView = function(props) {
-  console.log(props)
   var inEdges = Object.keys(props.vertex['in'])
   // Filter out edges with "hasInstance" in label
       .filter(key => key != 'hasInstance')
