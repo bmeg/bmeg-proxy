@@ -1,7 +1,7 @@
 var webpack = require('webpack');
 var path = require('path');
 
-var BUILD_DIR = path.resolve(__dirname, 'static/js');
+var BUILD_DIR = path.resolve(__dirname, 'site/js');
 var APP_DIR = path.resolve(__dirname, 'src/js/bmeg');
 
 var config = {

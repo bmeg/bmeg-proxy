@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+  <head>
+    <title>{{.Site.Title}}</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.blue-light_blue.min.css" />
+    <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+    {{ range .Params.javascript }}<script src="{{ . }}"></script>
+    {{ end }}
+  </head>
+  <body>
+    <!-- Always shows a header, even in smaller screens. -->
+    <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+      <header class="mdl-layout__header">
+        <div class="mdl-layout__header-row">
+          <!-- Title -->
+          <span class="mdl-layout-title"><a href="{{.Site.BaseURL}}"><img src="/bmeg-flat.png" height="45"/></a></span>
+          <!-- Add spacer, to align navigation to the right -->
+          <div class="mdl-layout-spacer"></div>
+          {{ if .Params.search }}
+          <form action="#">
+            <div class="mdl-textfield mdl-js-textfield">
+              <input class="mdl-textfield__input mdl-color--grey-100" type="text" id="sample1">
+              <label class="mdl-textfield__label" for="sample1"></label>
+            </div>
+          </form>
+          <div class="mdl-layout-spacer"></div>
+          {{ end }}
+        </div>
+      </header>
+      <div class="mdl-layout__drawer">
+        <span class="mdl-layout-title">Apps</span>
+        <nav class="mdl-navigation">
+          <a class="mdl-navigation__link" href="/">Home</a>
+          {{ range .Data.Pages }}
+          <a class="mdl-navigation__link" href="{{ .RelPermalink  }}">{{ .Title }}</a>
+          {{ end }}
+        </nav>
+        <span class="mdl-layout-title">
+          <img src="/ucsc-logo.png" height="35"/>
+          <img src="/ohsu-logo.png" height="35"/>
+        </span>
+      </div>
