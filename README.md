@@ -62,6 +62,10 @@ javascript:
 
 ```
 
+Then in the markdown, drop in the div elements that your javascript will use.
+
+
+
 ## Template parameters
 
 `title` : Name of the page
