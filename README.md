@@ -64,13 +64,25 @@ javascript:
 
 Then in the markdown, drop in the div elements that your javascript will use.
 
+# Static content
 
+The contents of the `static` directory will be copied directly into the site. Images and Javascript can be placed there.
+
+# Site Template
+
+The site template can be found in `themes/bmeg/`. The template engine description can 
+be found at [https://gohugo.io/templates/overview/]. The main site page is `themes/bmeg/layouts/index.html`
+Partial templates (which are fragments embedded in parent templates) can be found in `themes/bmeg/layouts/partials/`.
+The header for the MDL based template is `themes/bmeg/layouts/partials/header.html` with the footer file `themes/bmeg/layouts/partials/footer.html`.
 
 ## Template parameters
 
 `title` : Name of the page
 `search` : enable the search dialog on the top of the page
 `javascript` : An array of Javascript files to be imported
+
+
+## A
 
 
 ## React Design
