@@ -41,7 +41,7 @@ Then when you navigate to `http://localhost:8080` it will be a local mirror of t
 
 #  Adding content to the site
 
-The BMEG site it built via hugo HTML templating system [https://gohugo.io/]
+The BMEG site it built via hugo HTML templating system https://gohugo.io/
 The content is held in the `content` directory. Each page is done in markdown
 and there is a stanza at the start of the file that represents a YAML config file.
 These parameters are used to config the template when generating the HTML page.
@@ -71,18 +71,15 @@ The contents of the `static` directory will be copied directly into the site. Im
 # Site Template
 
 The site template can be found in `themes/bmeg/`. The template engine description can 
-be found at [https://gohugo.io/templates/overview/]. The main site page is `themes/bmeg/layouts/index.html`
+be found at https://gohugo.io/templates/overview/. The main site page is `themes/bmeg/layouts/index.html`
 Partial templates (which are fragments embedded in parent templates) can be found in `themes/bmeg/layouts/partials/`.
 The header for the MDL based template is `themes/bmeg/layouts/partials/header.html` with the footer file `themes/bmeg/layouts/partials/footer.html`.
 
 ## Template parameters
 
-`title` : Name of the page
-`search` : enable the search dialog on the top of the page
-`javascript` : An array of Javascript files to be imported
-
-
-## A
+- `title` : Name of the page
+- `search` : enable the search dialog on the top of the page
+- `javascript` : An array of Javascript files to be imported
 
 
 ## React Design
