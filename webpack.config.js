@@ -5,11 +5,14 @@ var BUILD_DIR = path.resolve(__dirname, 'site/js');
 var APP_DIR = path.resolve(__dirname, 'src/js/bmeg');
 
 var config = {
-  entry: ['whatwg-fetch', APP_DIR + '/vertex.jsx'],
+  entry: {
+    vertex: ['whatwg-fetch', APP_DIR + '/vertex.jsx'],
+    cohorts: [APP_DIR + '/cohorts.jsx'],
+  } ,
   devtool: 'source-map',
   output: {
     path: BUILD_DIR,
-    filename: 'bmeg.js'
+    filename: "[name].bundle.js"
   },
   module: {
     loaders: [
