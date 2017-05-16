@@ -53,11 +53,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("main")
     parser.add_argument("--port", type=int, default=8080)
+    parser.add_argument("--debug", default=False, action="store_true",
+                        help="Turns on autoreload and other debug features")
 
     args = parser.parse_args()
 
-    application = tornado.web.Application([
-        (r"^/()$", NoCacheStaticFileHandler, dict(path=os.path.join(SITE_DIR, "index.html"))),
+    application = tornado.web.Application( [ (r"^/()$", NoCacheStaticFileHandler, dict(path=os.path.join(SITE_DIR, "index.html"))),
         #(r"^/static/(.*)", NoCacheStaticFileHandler, dict(path=STATIC_DIR) ),
         (r"^/vertex/query", ProxyHandler, dict(url="%s/vertex/query" % args.main)),
         (r"^/schema/protograph", ProxyHandler, dict(url="%s/schema/protograph" % args.main)),
@@ -65,7 +66,9 @@ if __name__ == "__main__":
         (r"^/gaia/gene/(.*)/find/(.*)", ProxyHandler, dict(url="%s/gaia/vertex/find/" % args.main) ),
         (r"^/(.*)", NoCacheStaticFileHandler, dict(path=SITE_DIR, default_filename="index.html") ),
         #(r"^(.*)", ProxyHandler, dict(url=args.main)),
-    ])
+        ],
+        debug=args.debug
+    )
 
     application.listen(args.port)
     tornado.ioloop.IOLoop.instance().start()
