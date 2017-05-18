@@ -11,6 +11,4 @@ javascript:
   - /js/cohorts.bundle.js
 # see config.yml to check if we can add global js ...
 ---
-
-Cohort selection goes here!
 <div id="cohorts"></div>
