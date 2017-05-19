@@ -59,23 +59,23 @@ class Cohort extends Component {
 
 
 
- handleFavorite = (e) => {
-   var member = _.find(this.state.source, function(member){ return member.id == e.target.dataset.id; });
-   member.favorite = !member.favorite;
-   this.setState({ favorite: member.favorite });
- };
+  handleFavorite = (e) => {
+    var member = _.find(this.state.source, function(member){ return member.id == e.target.dataset.id; });
+    member.favorite = !member.favorite;
+    this.setState({ favorite: member.favorite });
+  };
 
- handleDelete = (e) => {
-   var deleteMe = confirm("Do you really want to delete? This cannot be undone.");
-   if (deleteMe) {
-     this.state.source = _.filter(this.state.source, function(member){ return member.id != e.target.dataset.id; });
-     this.setState({});
-   }
- };
+  handleDelete = (e) => {
+    var deleteMe = confirm("Do you really want to delete? This cannot be undone.");
+    if (deleteMe) {
+      this.state.source = _.filter(this.state.source, function(member){ return member.id != e.target.dataset.id; });
+      this.setState({});
+    }
+  };
 
- handleAdd = () => {
-   alert("Add sample(s) goes here ... ");
- };
+  handleAdd = () => {
+    alert("Add sample(s) goes here ... ");
+  };
 
 
   handleSelect = (selected) => {
