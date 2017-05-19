@@ -2,6 +2,10 @@
 import React,{Component} from 'react'
 import {render} from 'react-dom'
 
+// required to query bmeg
+import {Ophion} from 'ophion'
+
+
 // use this instead of boilerplate
 import * as _ from 'underscore'
 
@@ -19,7 +23,7 @@ const TooltipCell = Tooltip(TableCell);
 
 
 const ChipTest = () => (
-  <div>
+  <div className="mdl-grid" >
     <Chip>
       <Avatar title="C" /><span>Cohort tag...</span>
     </Chip>
@@ -42,15 +46,33 @@ class Cohort extends Component {
     super(props);
 
     /* initial state */
-    this.state = { selected: [] };
-    // given id:[] 'fetch' the data
-    // TODO - really fetch it
-    this.state.source =
-      _.map(this.props.members.split(','), function(memberId) {
-          return( {id:memberId, name:memberId+"'s name", favorite: memberId == 'A' } );
-        }) ;
-    console.log(this.state)
+    this.state = { selected: [], source: [] };
+    // this.state.source =
+    //   _.map(this.props.members.split(','), function(memberId) {
+    //       return( {id:memberId, name:memberId+"'s name", favorite: memberId == 'A' } );
+    //     }) ;
+    console.log('constructor',this.state)
   }
+
+  componentWillMount() {
+    // given filter:[] 'fetch' the data
+    // TODO - apply filter
+    var _self = this;
+    console.log(_);
+    Ophion().query().has("gid","type:IndividualCohort").outgoing("hasInstance")
+     .limit(99).execute(function(cohorts){
+      console.log('callback', cohorts);
+      _self.state.source =
+        _.map(cohorts, function(cohort) {
+          return( {id:cohort.properties.id, name:cohort.properties.name, favorite: false } );
+        }) ;
+      _self.setState(_self.state);
+    });
+    console.log('componentWillMount',this.state)
+  }
+
+
+
 
   // the class property is initialized with an arrow function that binds this to the class
   handleClick = (e) => {
@@ -73,9 +95,13 @@ class Cohort extends Component {
    }
  };
 
- handleAdd = () => {
-   alert("Add sample(s) goes here ... ");
- };
+  handleAdd = () => {
+    // alert("Add sample(s) goes here ... ");
+    var O = Ophion();
+    // [{"has":{"key":"gid","value":{"s":"type:IndividualCohort"}}},{"out":{"labels":["hasInstance"]}},{"limit":1}]
+    O.query().has("gid","type:IndividualCohort").outgoing("hasInstance").limit(2).execute(function(x){console.log(x)});
+    // O.query().limit(1).execute(function(x){console.log(x)});
+  };
 
 
   handleSelect = (selected) => {
@@ -89,17 +115,16 @@ class Cohort extends Component {
     return (
       <div>
         <ChipTest/>
-        <h1>Cohort: {this.props.name} </h1>
-        <h2>Samples:</h2>
+        <h1>Cohorts: {this.props.name}</h1>
         <Table multiSelectable onRowSelect={this.handleSelect} style={{ marginTop: 10 }}>
           <TableHead>
-            <TooltipCell onClick={this.handleClick}  tooltip="The sample's id">
+            <TooltipCell onClick={this.handleClick} tooltipPosition="left" tooltip="The cohort's id">
               Id
             </TooltipCell>
-            <TooltipCell onClick={this.handleClick} tooltip="The sample's Name">
+            <TooltipCell onClick={this.handleClick} tooltipPosition="left" tooltip="The cohort's Name">
               Name
             </TooltipCell>
-            <TooltipCell onClick={this.handleClick} tooltip="Actions you can take on a sample">
+            <TooltipCell onClick={this.handleClick} tooltipPosition="left" tooltip="Actions you can take on a cohort">
               Actions
             </TooltipCell>
           </TableHead>
@@ -125,8 +150,10 @@ class Cohort extends Component {
             </TableRow>
           ))}
         </Table>
-        <div>
-          <TooltipButton icon='add' floating accent onClick={this.handleAdd}  tooltip='Another Tooltip'/>
+        <div className="mdl-grid">
+          <div className="mdl-cell mdl-cell--12-col mdl-cell--rght">
+            <TooltipButton icon='add' floating accent onClick={this.handleAdd}  tooltip='Another Tooltip'  style={{'float':'right'}} />
+          </div>
         </div>
       </div>
     ) ;
@@ -136,5 +163,5 @@ class Cohort extends Component {
 
 // when page loads, render component
 window.onload = function() {
-  render(<Cohort name="my first cohort" members="A,B,C,D" />, document.getElementById('cohorts'));
+  render(<Cohort name="All" filter="" />, document.getElementById('cohorts'));
 }
