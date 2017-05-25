@@ -55,6 +55,8 @@ class Cohort extends Component {
       selectedProjectNames: [],
       selectedGenders: [],
       selectedGenderNames: [],
+      selectedTumorStatus: [],
+      selectedTumorStatusNames: [],
       selectedSamples: [],
       sidebarOpen: true
     };
@@ -106,6 +108,20 @@ class Cohort extends Component {
     }
   }
 
+  tumorStatusClicked = (tumorStatus) => {
+    console.log('tumorStatusClicked', tumorStatus);
+    if (tumorStatus.selected) {
+      this.setState({
+        selectedTumorStatus: _.union(this.state.selectedTumorStatus, [tumorStatus.gid]),
+        selectedTumorStatusNames: _.union(this.state.selectedTumorStatusNames, [tumorStatus.name]),
+      })
+    } else {
+      this.setState({
+        selectedTumorStatus: _.filter(this.state.selectedTumorStatus, function(gid){ return gid != tumorStatus.gid; } ),
+        selectedTumorStatusNames: _.filter(this.state.selectedTumorStatusNames, function(name){ return name != tumorStatus.name; } )
+      })
+    }
+  }
 
   queryClicked = (query) => {
     console.log('queryClicked', query);
@@ -141,6 +157,9 @@ class Cohort extends Component {
       if (this.state.selectedGenders.length > 0) {
         ophionQuery = ophionQuery.has("info.gender", O.within(this.state.selectedGenders));
       }
+      if (this.state.selectedTumorStatus.length > 0) {
+        ophionQuery = ophionQuery.has("info.tumorStatus", O.within(this.state.selectedTumorStatus));
+      }
       samples = <div>
         <OphionTable
           query={ophionQuery}
@@ -160,8 +179,9 @@ class Cohort extends Component {
       <div style={{paddingTop:'5em'}}>
         <div className="mdl-grid">
           <div className="mdl-cell mdl-cell--12-col mdl-cell--rght">
-            <h3>Projects:{this.state.selectedProjectNames.join(',')}</h3>
-            <h3>Genders:{this.state.selectedGenderNames.join(',')}</h3>
+            <h5>Projects:{this.state.selectedProjectNames.join(',')}</h5>
+            <h5>Genders:{this.state.selectedGenderNames.join(',')}</h5>
+            <h5>Tumor Status:{this.state.selectedTumorStatusNames.join(',')}</h5>
           </div>
           <div className="mdl-cell mdl-cell--12-col mdl-cell--rght">
             {samples}
@@ -177,7 +197,8 @@ class Cohort extends Component {
         caption='Explore BMEG'
         onProjectSelect={this.projectClicked}
         onQuerySelect={this.queryClicked}
-        onGenderSelect={this.genderClicked}>
+        onGenderSelect={this.genderClicked}
+        onTumorStatusSelect={this.tumorStatusClicked}>
         {mainContent}
       </OphionSidebar>
     ) ;

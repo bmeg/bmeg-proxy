@@ -112,6 +112,37 @@ export default class OphionSidebar extends Component {
     </div> ;
   }
 
+  // tumorStatus
+  renderTumorStatus = () => {
+    var O = Ophion();
+    var ophionQuery = O.query().has("gid","type:Individual").outgoing("hasInstance").groupCount("info.tumorStatus");
+    var _self = this ;
+    return <div>
+      <OphionFacet
+        query={ophionQuery}
+        caption='TumorStatus'
+        leftIcon='swap_calls'
+        afterExecute={ ophionObjects => {
+            var mappedOphionData = [] ;
+            console.log('tumorStatus afterExecute',ophionObjects)
+            mappedOphionData.push({name:'TUMOR FREE', gid: '["TUMOR FREE"]', count: ophionObjects[0]['["TUMOR FREE"]'] });
+            mappedOphionData.push({name:'WITH TUMOR', gid: '["WITH TUMOR"]', count: ophionObjects[0]['["WITH TUMOR"]'] });
+            return mappedOphionData;
+          }
+        }
+        onItemSelect={item => {
+            console.log('Genders onItemSelect',item,this.props.onTumorStatusSelect)
+            if (_self.props.onTumorStatusSelect) {
+              _self.props.onTumorStatusSelect(item);
+            }
+          }
+        }
+      />
+    </div> ;
+  }
+
+
+
 
 
   // facet will call this callback for common result processing
@@ -161,6 +192,7 @@ export default class OphionSidebar extends Component {
         <ListSubHeader caption={this.props.caption}/>
         {this.renderProjects()}
         {this.renderGenders()}
+        {this.renderTumorStatus()}
         <ListDivider />
         {this.renderUserStorage()}
         <ListItem caption='Settings' leftIcon='settings' />
