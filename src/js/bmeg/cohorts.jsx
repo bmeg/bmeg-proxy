@@ -52,6 +52,9 @@ class Cohort extends Component {
     /* initial state */
     this.state = {
       selectedProjects: [],
+      selectedProjectNames: [],
+      selectedGenders: [],
+      selectedGenderNames: [],
       selectedSamples: [],
       sidebarOpen: true
     };
@@ -73,14 +76,42 @@ class Cohort extends Component {
     O.query().has("gid", cohortId).outgoing("hasMember").incoming("biosampleOfIndividual").count().execute(function(x){console.log(x)});
   };
 
-  cohortClicked = (row) => {
-    console.log('cohortClicked', row);
-    if (row.selected) {
-      this.setState({selectedProjects: _.union(this.state.selectedProjects, [row.gid])})
+  projectClicked = (project) => {
+    console.log('projectClicked', project);
+    if (project.selected) {
+      this.setState({
+        selectedProjects: _.union(this.state.selectedProjects, [project.gid]),
+        selectedProjectNames: _.union(this.state.selectedProjectNames, [project.name]),
+      })
     } else {
-      this.setState({selectedProjects: _.filter(this.state.selectedProjects, function(gid){ return gid != row.gid; } )})
+      this.setState({
+        selectedProjects: _.filter(this.state.selectedProjects, function(gid){ return gid != project.gid; } ),
+        selectedProjectNames: _.filter(this.state.selectedProjectNames, function(name){ return name != project.name; } )
+      })
     }
   }
+
+  genderClicked = (gender) => {
+    console.log('genderClicked', gender);
+    if (gender.selected) {
+      this.setState({
+        selectedGenders: _.union(this.state.selectedGenders, [gender.gid]),
+        selectedGenderNames: _.union(this.state.selectedGenderNames, [gender.name]),
+      })
+    } else {
+      this.setState({
+        selectedGenders: _.filter(this.state.selectedGenders, function(gid){ return gid != gender.gid; } ),
+        selectedGenderNames: _.filter(this.state.selectedGenderNames, function(name){ return name != gender.name; } )
+      })
+    }
+  }
+
+
+  queryClicked = (query) => {
+    console.log('queryClicked', query);
+  }
+
+
 
   cohortSelected = (row) => {
     console.log('cohortSelected', row);
@@ -107,8 +138,10 @@ class Cohort extends Component {
     if (this.state.selectedProjects.length > 0) {
       console.log('this.state.selectedProjects',this.state.selectedProjects);
       var ophionQuery = O.query().has("gid",O.within(this.state.selectedProjects)).outgoing("hasMember");
+      if (this.state.selectedGenders.length > 0) {
+        ophionQuery = ophionQuery.has("info.gender", O.within(this.state.selectedGenders));
+      }
       samples = <div>
-        <h2>Individuals: {this.state.selectedProjects}</h2>
         <OphionTable
           query={ophionQuery}
           onRowClick={this.sampleClicked}
@@ -124,10 +157,11 @@ class Cohort extends Component {
     Ophion.prototype.testMonkey = function(msg) {console.log('testMonkey'); };
     var O = Ophion();
     let mainContent =
-      <div>
+      <div style={{paddingTop:'5em'}}>
         <div className="mdl-grid">
           <div className="mdl-cell mdl-cell--12-col mdl-cell--rght">
-            <ChipTest/>
+            <h3>Projects:{this.state.selectedProjectNames.join(',')}</h3>
+            <h3>Genders:{this.state.selectedGenderNames.join(',')}</h3>
           </div>
           <div className="mdl-cell mdl-cell--12-col mdl-cell--rght">
             {samples}
@@ -138,17 +172,12 @@ class Cohort extends Component {
         </div>
       </div> ;
 
-    var ophionQuery = O.query().has("gid", "type:IndividualCohort").outgoing("hasInstance").match([
-      O.mark('cohort').values(["gid"]).mark("gid"),
-      O.mark('cohort').values(["name"]).mark("name"),
-      O.mark("cohort").outEdge('hasMember').count().mark('count')
-      ]).select(['gid', 'name', 'count']);
-    ophionQuery.testMonkey = function(msg) {console.log('testMonkey2:'+ msg)};
     return (
       <OphionSidebar
-        query={ophionQuery}
-        legend='Project'
-        onProjectSelect={this.cohortClicked}>
+        caption='Explore BMEG'
+        onProjectSelect={this.projectClicked}
+        onQuerySelect={this.queryClicked}
+        onGenderSelect={this.genderClicked}>
         {mainContent}
       </OphionSidebar>
     ) ;

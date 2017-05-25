@@ -54,13 +54,14 @@ export default class OphionFacet extends Component {
     // given filter:[] 'fetch' the data
     // TODO - apply filter, limit, paging
     var _self = this;
-    console.log(JSON.stringify(ophionQuery));
-
+    var startTime = new Date();
     ophionQuery.execute(function(ophionObjects){
       var mappedOphionData = ophionObjects;
       if (_self.props.afterExecute) {
         mappedOphionData = _self.props.afterExecute(ophionObjects);
       }
+      var endTime = new Date();
+      console.log(JSON.stringify(ophionQuery), 'took ',  endTime - startTime, 'ms');
       _self.setState({source: mappedOphionData});
       console.log('mappedOphionData', 'after setState');
     });
@@ -75,6 +76,10 @@ export default class OphionFacet extends Component {
     var itemItems = [];
     // render individual list member clickable value
     var renderItemListCheckbox = (item) => {
+      var legend = item.name ;
+      if (item.count) {
+        legend += ' (' + item.count +')' ;
+      }
       return <TooltipListCheckbox
                 onChange={checked =>{
                     console.log('onChange',checked);
@@ -90,7 +95,7 @@ export default class OphionFacet extends Component {
                 }
                 floating accent tooltip='fooo'
                 checked={item.selected}
-                legend={item.name + ' (' + item.count +')' }
+                legend={legend}
                 key={item.gid}
                 id={item.gid}
                 //TODO - css property file: reimplement in react

@@ -86,9 +86,11 @@ export default class OphionTable extends Component {
     // TODO - apply filter, limit, paging
     var _self = this;
     var properties = []
-    console.log(JSON.stringify(ophionQuery));
+    var startTime = new Date();
     ophionQuery.execute(function(ophionObjects){
       console.log(ophionObjects);
+      var endTime = new Date();
+      console.log(JSON.stringify(ophionQuery), 'took ',  endTime - startTime, 'ms');      
       var mappedOphionData =
         _.map(ophionObjects, function(ophionObject) {
           _.each(_.keys(ophionObject.properties), function(key){
