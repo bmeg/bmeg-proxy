@@ -27,6 +27,8 @@
     "react-addons-css-transition-group": "^15.5.2",
     "react-dom": "15.4.2",
     "react-faux-dom": "3.0.0",
+    "react-sidebar": "^2.3.2",
+    "react-table": "^6.0.5",
     "react-toolbox": "^2.0.0-beta.8",
     "style-loader": "^0.17.0",
     "underscore": "1.8.3",

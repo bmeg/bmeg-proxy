@@ -1,3 +1,8 @@
+
+
+
+
+
 // required for all components
 import React,{Component} from 'react'
 import {render} from 'react-dom'
@@ -5,22 +10,22 @@ import {render} from 'react-dom'
 // required to query bmeg
 import {Ophion} from 'ophion'
 
-
 // use this instead of boilerplate
 import * as _ from 'underscore'
 
 // toolbox components
 import {Button, IconButton} from 'react-toolbox/lib/button';
 import Tooltip from 'react-toolbox/lib/tooltip';
-import { Table, TableHead, TableRow, TableCell } from 'react-toolbox/lib/table';
 import Avatar from 'react-toolbox/lib/avatar';
 import Chip from 'react-toolbox/lib/chip';
 import Dialog from 'react-toolbox/lib/dialog';
 
+
+import OphionTable from './ophion-table.jsx';
+import OphionSidebar from './ophion-sidebar.jsx';
+
 // tooltip versions
 const TooltipButton = Tooltip(Button);
-const TooltipCell = Tooltip(TableCell);
-
 
 const ChipTest = () => (
   <div className="mdl-grid" >
@@ -44,34 +49,14 @@ class Cohort extends Component {
 
   constructor(props) {
     super(props);
-
     /* initial state */
-    this.state = { selected: [], source: [] };
-    // this.state.source =
-    //   _.map(this.props.members.split(','), function(memberId) {
-    //       return( {id:memberId, name:memberId+"'s name", favorite: memberId == 'A' } );
-    //     }) ;
-    console.log('constructor',this.state)
+    this.state = {
+      selectedProjects: [],
+      selectedSamples: [],
+      sidebarOpen: true
+    };
+
   }
-
-  componentWillMount() {
-    // given filter:[] 'fetch' the data
-    // TODO - apply filter
-    var _self = this;
-    console.log(_);
-    Ophion().query().has("gid","type:IndividualCohort").outgoing("hasInstance")
-     .limit(99).execute(function(cohorts){
-      console.log('callback', cohorts);
-      _self.state.source =
-        _.map(cohorts, function(cohort) {
-          return( {id:cohort.properties.id, name:cohort.properties.name, favorite: false } );
-        }) ;
-      _self.setState(_self.state);
-    });
-    console.log('componentWillMount',this.state)
-  }
-
-
 
 
   // the class property is initialized with an arrow function that binds this to the class
@@ -79,86 +64,96 @@ class Cohort extends Component {
     console.log('Something was clicked.',e);
   }
 
-
-
- handleFavorite = (e) => {
-   var member = _.find(this.state.source, function(member){ return member.id == e.target.dataset.id; });
-   member.favorite = !member.favorite;
-   this.setState({ favorite: member.favorite });
- };
-
- handleDelete = (e) => {
-   var deleteMe = confirm("Do you really want to delete? This cannot be undone.");
-   if (deleteMe) {
-     this.state.source = _.filter(this.state.source, function(member){ return member.id != e.target.dataset.id; });
-     this.setState({});
-   }
- };
-
-  handleAdd = () => {
+  showCohortSamples = (cohortId) => {
     // alert("Add sample(s) goes here ... ");
     var O = Ophion();
     // [{"has":{"key":"gid","value":{"s":"type:IndividualCohort"}}},{"out":{"labels":["hasInstance"]}},{"limit":1}]
-    O.query().has("gid","type:IndividualCohort").outgoing("hasInstance").limit(2).execute(function(x){console.log(x)});
-    // O.query().limit(1).execute(function(x){console.log(x)});
+    //O.query().has("gid","type:Biosample").outgoing("hasInstance").limit(2).execute(function(x){console.log(x)});
+    O.query().has("gid", cohortId).outgoing("hasMember").incoming("biosampleOfIndividual").limit(20).execute(function(x){console.log(x)});
+    O.query().has("gid", cohortId).outgoing("hasMember").incoming("biosampleOfIndividual").count().execute(function(x){console.log(x)});
   };
 
+  cohortClicked = (row) => {
+    console.log('cohortClicked', row);
+    if (row.selected) {
+      this.setState({selectedProjects: _.union(this.state.selectedProjects, [row.gid])})
+    } else {
+      this.setState({selectedProjects: _.filter(this.state.selectedProjects, function(gid){ return gid != row.gid; } )})
+    }
+  }
 
-  handleSelect = (selected) => {
-    console.log('handleSelect clicked.', selected);
-    this.setState({ selected: selected.map(item => this.state.source[item].id) });
-  };
+  cohortSelected = (row) => {
+    console.log('cohortSelected', row);
+  }
+
+  sampleClicked = (row) => {
+    console.log('sampleClicked', row);
+  }
+
+  sampleSelected = (row) => {
+    console.log('sampleSelected', row);
+  }
+
+  onSetSidebarOpen = (open) => {
+    this.setState({sidebarOpen: open});
+  }
 
 
   render() {
     // cohort and all members
-    return (
+    let samples = null ;
+    Ophion.prototype.testMonkey = function(msg) {console.log('testMonkey2'); };
+    var O = Ophion();
+    if (this.state.selectedProjects.length > 0) {
+      console.log('this.state.selectedProjects',this.state.selectedProjects);
+      var ophionQuery = O.query().has("gid",O.within(this.state.selectedProjects)).outgoing("hasMember");
+      samples = <div>
+        <h2>Individuals: {this.state.selectedProjects}</h2>
+        <OphionTable
+          query={ophionQuery}
+          onRowClick={this.sampleClicked}
+          onSelect={this.sampleSelected}
+          hiddenProperties={["gid"]}
+        />
+      </div>  ;
+    } else {
+      samples = <h2>Click on cohort</h2> ;
+    }
+
+    //Ophion().query().has("gid","type:IndividualCohort").outgoing("hasInstance")
+    Ophion.prototype.testMonkey = function(msg) {console.log('testMonkey'); };
+    var O = Ophion();
+    let mainContent =
       <div>
-        <ChipTest/>
-        <h1>Cohorts: {this.props.name}</h1>
-        <Table multiSelectable onRowSelect={this.handleSelect} style={{ marginTop: 10 }}>
-          <TableHead>
-            <TooltipCell onClick={this.handleClick} tooltipPosition="left" tooltip="The cohort's id">
-              Id
-            </TooltipCell>
-            <TooltipCell onClick={this.handleClick} tooltipPosition="left" tooltip="The cohort's Name">
-              Name
-            </TooltipCell>
-            <TooltipCell onClick={this.handleClick} tooltipPosition="left" tooltip="Actions you can take on a cohort">
-              Actions
-            </TooltipCell>
-          </TableHead>
-          {this.state.source.map((item, idx) => (
-            <TableRow key={idx} selected={this.state.selected.indexOf(item.id) !== -1}>
-              <TableCell>{item.id}</TableCell>
-              <TableCell>
-                {item.name}
-              </TableCell>
-              <TableCell>
-                <IconButton
-                  icon={item.favorite ? 'favorite' : 'favorite_border' }
-                  accent={item.favorite}
-                  data-id={item.id}
-                  onClick={this.handleFavorite} />
-                <IconButton
-                  icon='delete_forever'
-                  data-id={item.id}
-                  onClick={this.handleDelete} />
-
-              </TableCell>
-
-            </TableRow>
-          ))}
-        </Table>
         <div className="mdl-grid">
+          <div className="mdl-cell mdl-cell--12-col mdl-cell--rght">
+            <ChipTest/>
+          </div>
+          <div className="mdl-cell mdl-cell--12-col mdl-cell--rght">
+            {samples}
+          </div>
           <div className="mdl-cell mdl-cell--12-col mdl-cell--rght">
             <TooltipButton icon='add' floating accent onClick={this.handleAdd}  tooltip='Another Tooltip'  style={{'float':'right'}} />
           </div>
         </div>
-      </div>
-    ) ;
+      </div> ;
 
+    var ophionQuery = O.query().has("gid", "type:IndividualCohort").outgoing("hasInstance").match([
+      O.mark('cohort').values(["gid"]).mark("gid"),
+      O.mark('cohort').values(["name"]).mark("name"),
+      O.mark("cohort").outEdge('hasMember').count().mark('count')
+      ]).select(['gid', 'name', 'count']);
+    ophionQuery.testMonkey = function(msg) {console.log('testMonkey2:'+ msg)};
+    return (
+      <OphionSidebar
+        query={ophionQuery}
+        legend='Project'
+        onProjectSelect={this.cohortClicked}>
+        {mainContent}
+      </OphionSidebar>
+    ) ;
   }
+
 }
 
 // when page loads, render component

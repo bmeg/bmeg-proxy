@@ -9,7 +9,7 @@ var APP_DIR = path.resolve(__dirname, 'src/js/bmeg');
 var config = {
   entry: {
     vertex: ['whatwg-fetch', APP_DIR + '/vertex.jsx'],
-    cohorts: [APP_DIR + '/cohorts.jsx'],
+    cohorts: [APP_DIR + '/cohorts.jsx']
   } ,
   resolve: {
     extensions: [".js", ".json", ".css"]
