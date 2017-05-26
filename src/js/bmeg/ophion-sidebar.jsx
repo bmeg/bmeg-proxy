@@ -43,7 +43,21 @@ export default class OphionSidebar extends Component {
   renderUserStorage = () => {
     return <div>
       <OphionFacet
-        query={{execute: function(callBack){callBack([{gid:'foo', name:'foo'}])}}}
+        query={
+          {
+            lastUpdate: this.props.lastUpdate,
+            execute: function(callBack){
+              var queriesJSON = localStorage.getItem('queries') || "{}" ;
+              var queries = JSON.parse(queriesJSON) ;
+              var queryIds =
+                _.map(_.keys(queries), function(name) {
+                    return {gid:name, name: name, query: queries[name]};
+                  }
+                );
+              callBack(queryIds);
+            }
+          }
+        }
         caption='My queries'
         leftIcon='folder'
         afterExecute={this.afterExecute}

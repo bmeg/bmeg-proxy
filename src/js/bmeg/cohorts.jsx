@@ -19,6 +19,7 @@ import Tooltip from 'react-toolbox/lib/tooltip';
 import Avatar from 'react-toolbox/lib/avatar';
 import Chip from 'react-toolbox/lib/chip';
 import Dialog from 'react-toolbox/lib/dialog';
+import Input from 'react-toolbox/lib/input';
 
 
 import OphionTable from './ophion-table.jsx';
@@ -26,23 +27,6 @@ import OphionSidebar from './ophion-sidebar.jsx';
 
 // tooltip versions
 const TooltipButton = Tooltip(Button);
-
-const ChipTest = () => (
-  <div className="mdl-grid" >
-    <Chip>
-      <Avatar title="C" /><span>Cohort tag...</span>
-    </Chip>
-    <Chip deletable>Deletable tag</Chip>
-    <Chip>
-      <Avatar style={{backgroundColor: 'deepskyblue'}} icon="folder" />
-      <span>Data</span>
-    </Chip>
-    <Chip>
-      <Avatar><img src="https://image.freepik.com/iconos-gratis/celda_318-125781.jpg"/></Avatar>
-      <span>Microscopy</span>
-    </Chip>
-  </div>
-);
 
 
 class Cohort extends Component {
@@ -58,10 +42,38 @@ class Cohort extends Component {
       selectedTumorStatus: [],
       selectedTumorStatusNames: [],
       selectedSamples: [],
-      sidebarOpen: true
+      sidebarOpen: true,
+      activeDialog: false
     };
 
   }
+
+
+  handleChange = (name, value) => {
+    this.setState({...this.state, [name]: value});
+    console.log('handleChange', name, value);
+  };
+
+  toggleDialog = () => {
+    console.log('toggleDialog', !this.state.activeDialog )
+    this.setState({activeDialog: !this.state.activeDialog});
+  }
+
+  saveQuery = () => {
+    console.log('saveDialog',this.state.queryName, this.state.lastQuery);
+    var queriesJSON = localStorage.getItem('queries') || "{}" ;
+    var queries = JSON.parse(queriesJSON) ;
+    queries[this.state.queryName] = JSON.stringify(this.state.lastQuery);
+    localStorage.setItem('queries', JSON.stringify(queries));
+    this.toggleDialog();
+    this.setState({querySaved: true});
+  }
+
+  actions = [
+    { label: "Cancel", onClick: this.toggleDialog },
+    { label: "Save", onClick: this.saveQuery }
+  ];
+
 
 
   // the class property is initialized with an arrow function that binds this to the class
@@ -125,6 +137,9 @@ class Cohort extends Component {
 
   queryClicked = (query) => {
     console.log('queryClicked', query);
+    var ophionQuery = Ophion().query()
+    ophionQuery.query.push.apply(ophionQuery.query, JSON.parse(query.query).query)
+    this.setState({selectedQuery: ophionQuery });
   }
 
 
@@ -149,9 +164,14 @@ class Cohort extends Component {
   render() {
     // cohort and all members
     let samples = null ;
-    Ophion.prototype.testMonkey = function(msg) {console.log('testMonkey2'); };
     var O = Ophion();
-    if (this.state.selectedProjects.length > 0) {
+    var ophionQuery = undefined ;
+
+    if (this.state.selectedQuery) {
+      ophionQuery = this.state.selectedQuery ;
+      this.state.selectedQuery = undefined ;
+    }
+    else if (this.state.selectedProjects.length > 0) {
       console.log('this.state.selectedProjects',this.state.selectedProjects);
       var ophionQuery = O.query().has("gid",O.within(this.state.selectedProjects)).outgoing("hasMember");
       if (this.state.selectedGenders.length > 0) {
@@ -160,6 +180,9 @@ class Cohort extends Component {
       if (this.state.selectedTumorStatus.length > 0) {
         ophionQuery = ophionQuery.has("info.tumorStatus", O.within(this.state.selectedTumorStatus));
       }
+    }
+    if (ophionQuery) {
+      this.state.lastQuery = ophionQuery;
       samples = <div>
         <OphionTable
           query={ophionQuery}
@@ -169,12 +192,9 @@ class Cohort extends Component {
         />
       </div>  ;
     } else {
-      samples = <h2>Click on cohort</h2> ;
+      samples = <p/> ;
     }
 
-    //Ophion().query().has("gid","type:IndividualCohort").outgoing("hasInstance")
-    Ophion.prototype.testMonkey = function(msg) {console.log('testMonkey'); };
-    var O = Ophion();
     let mainContent =
       <div style={{paddingTop:'5em'}}>
         <div className="mdl-grid">
@@ -187,7 +207,21 @@ class Cohort extends Component {
             {samples}
           </div>
           <div className="mdl-cell mdl-cell--12-col mdl-cell--rght">
-            <TooltipButton icon='add' floating accent onClick={this.handleAdd}  tooltip='Another Tooltip'  style={{'float':'right'}} />
+            <Dialog
+               actions={this.actions}
+               active={this.state.activeDialog}
+               onEscKeyDown={this.toggleDialog}
+               onOverlayClick={this.toggleDialog}
+               title='Save Query'
+             >
+               <p>Saves query to local storage on this browser. Current query</p>
+               <code>
+                {JSON.stringify(this.state.lastQuery)}
+               </code>
+               <Input type='text' label='Name' name='name' value={this.state.queryName} onChange={this.handleChange.bind(this, 'queryName')} maxLength={64} />
+
+            </Dialog>
+            <TooltipButton icon='save' floating accent onClick={this.toggleDialog}  tooltip='Save query'  style={{'float':'right'}} />
           </div>
         </div>
       </div> ;
@@ -195,6 +229,7 @@ class Cohort extends Component {
     return (
       <OphionSidebar
         caption='Explore BMEG'
+        lastUpdate={new Date()}
         onProjectSelect={this.projectClicked}
         onQuerySelect={this.queryClicked}
         onGenderSelect={this.genderClicked}
