@@ -38,7 +38,7 @@
         <span class="mdl-layout-title">Apps</span>
         <nav class="mdl-navigation">
           <a class="mdl-navigation__link" href="/">Home</a>
-          {{ range .Data.Pages }}
+          {{ range .Site.Pages }}
           <a class="mdl-navigation__link" href="{{ .RelPermalink  }}">{{ .Title }}</a>
           {{ end }}
         </nav>
