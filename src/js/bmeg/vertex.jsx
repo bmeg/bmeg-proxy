@@ -921,6 +921,37 @@ class SchemaGraph extends Component {
   constructor(props){
     super(props)
     this.renderCytoscape = this.renderCytoscape.bind(this)
+    this.schemaPositions = {
+      Project: [0.0, 0.5],
+      Individual: [0.15, 0.5],
+      Cohort: [0.15, 0.3],
+      Biosample: [0.3, 0.5],
+      GeneExpression: [0.5, 0.2],
+      Variant: [0.5, 0.35],
+      CNASegment: [0.5, 0.5],
+      Compound: [0.5, 0.65],
+      Predictor: [0.5, 0.8],
+      OntologyTerm: [0.5, 0.95],
+      LinearSignature: [0.65, 0.75],
+      PhenotypeInstance: [0.65, 0.9],
+      Gene: [0.7, 0.5],
+      GeneDatabase: [0.85, 0.35],
+      Pubmed: [0.85, 0.5],
+      GeneFamily: [0.85, 0.65],
+    }
+  }
+
+  calculatePositions(width, height) {
+    var self = this;
+    return Object.keys(this.schemaPositions).reduce(function(positions, key) {
+      var ratio = self.schemaPositions[key]
+      if (ratio) {
+        positions[key] = {x: ratio[0] * width, y: ratio[1] * height}
+      } else {
+        positions[key] = {x: 100, y: 100}
+      }
+      return positions
+    }, {})
   }
 
   renderCytoscape() {
@@ -930,19 +961,25 @@ class SchemaGraph extends Component {
     var edgeColor = '#f22f08'
     var edgeText = '#ffffff'
 
+    var radius = Math.min(this.props.width, this.props.height) * 0.08;
+
     var cyelement = this.refs.cytoscape
     this.cy = cytoscape({
       container: cyelement,
       // container: document.getElementById('cy'),
       boxSelectionEnabled: false,
       autounselectify: true,
-
+      // zoomingEnabled: false,
+      userZoomingEnabled: false,
+      // panningEnabled: false,
+      userPanningEnabled: false,
+      
       style: cytoscape.stylesheet()
         .selector('node')
         .css({
           'content': 'data(name)',
-          'height': 80,
-          'width': 80,
+          'height': radius, // 80
+          'width': radius, // 80
           'background-fit': 'cover',
           'background-color': nodeColor,
           // 'border-color': '#000',
@@ -951,37 +988,46 @@ class SchemaGraph extends Component {
           // 'shape': 'roundrectangle',
           'color': nodeText,
           'font-family': '"Lucida Sans Unicode", "Lucida Grande", sans-serif',
-          'font-size': 24,
+          'font-size': radius * 0.24, // 24
           'text-outline-color': nodeColor,
-          'text-outline-width': 3,
+          'text-outline-width': radius * 0.03, // 3,
           'text-valign': 'center'
         })
 
         .selector('edge')
         .css({
           'content': 'data(label)',
-          'width': 6,
+          'width': radius * 0.06,
           'edge-text-rotation': 'autorotate',
           'target-arrow-shape': 'triangle',
           'line-color': edgeColor,
           'target-arrow-color': edgeColor,
           'curve-style': 'bezier',
           'color': edgeText,
-          'font-size': 18,
+          'font-size': radius * 0.18, // 18
           'text-outline-color': edgeColor,
-          'text-outline-width': 2,
+          'text-outline-width': radius * 0.02, // 2
         }),
 
       elements: schemaToCytoscape(this.props.schema)
     })
 
     this.layout = this.cy.makeLayout({
-      name: 'cose' // ,
+      name: 'preset',
+      positions: this.calculatePositions(this.props.width, this.props.height)
       // animate: true,
       // padding: 30,
       // animationThreshold: 250,
       // refresh: 20
     })
+
+    // this.layout = this.cy.makeLayout({
+    //   name: 'cose' // ,
+    //   // animate: true,
+    //   // padding: 30,
+    //   // animationThreshold: 250,
+    //   // refresh: 20
+    // })
   }
 
   componentDidMount() {
@@ -1014,14 +1060,14 @@ class SchemaGraph extends Component {
 
   render(){
     let containerStyle = {
-      height: this.props.height || '1000px',
-      width: this.props.width || '1000px'
+      height: this.props.height || '100px',
+      width: this.props.width || '100px'
     }
 
     return(
-        <div>
+      <div>
         <div id="cy" style={containerStyle} ref="cytoscape" />
-        </div>
+      </div>
     )
   }
 }
@@ -1097,6 +1143,7 @@ class SchemaViewer extends Component {
 
   componentDidMount() {
     console.log('mounting')
+    console.log(this.props);
 
     var params = urlParams()
     console.log(params)
@@ -1117,15 +1164,15 @@ class SchemaViewer extends Component {
     var elements = []
     if (this.state.gid) {
       var vertex = <VertexViewer key="vertex" label={this.state.label} input={this.state.gid} visualizations={generateVisualizations()} />
-          elements.push(vertex)
+      elements.push(vertex)
     } else if (this.state.loaded) {
       var schema = <SchemaGraph key="schema" ref="schema" width={this.props.width} height={this.props.height} schema={this.state.schema} />
-          elements.push(schema)
+      elements.push(schema)
     } else {
       elements.push(<div key="loading"><img src={loadingSpinner} /></div>)
     }
     return (
-        <div>
+      <div>
         {elements}
       </div>
     )
@@ -1145,8 +1192,9 @@ function schema(router) {
 }
 
 function schemaViewer(router) {
-  var width = 800
-  var height = 800
+  var parent = document.getElementById('vertex-explore');
+  var width = parent.clientWidth;
+  var height = window.innerHeight - 100;
   render(<SchemaViewer width={width} height={height} schema={schema} />, document.getElementById('vertex-explore'))
 }
 
