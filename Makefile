@@ -1,7 +1,4 @@
 
-go-server:
-	go run bmeg-proxy.go bmeg.io:80
-
 site-build:
 	./node_modules/.bin/webpack -d
 	hugo -d site
@@ -11,3 +8,6 @@ server:
 
 dev-server:
 	hugo server
+
+go-server:
+	go run bmeg-proxy.go bmeg.io:80
