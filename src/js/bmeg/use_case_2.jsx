@@ -330,6 +330,12 @@ export var use_case_2 = {};
       var geneId = this.state.inputValue;
       console.log("query GAIA with geneId: " + geneId);
 
+      // TODO: Ophion query here
+      function queryDrugSignatures(queryGenes) {
+        var queryResult = null;
+        return queryResult;
+      }
+
       // query gaia server
       // https://davidwalsh.name/fetch
       var request = new Request('/gaea/signature/mutation', {
