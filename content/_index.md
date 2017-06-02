@@ -1,6 +1,7 @@
 ---
 search: true
 title: Home
+weight: 1
 
 javascript:
   - https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js

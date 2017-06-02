@@ -4,12 +4,37 @@ import * as _ from 'underscore'
 // import * as classNames from 'classnames'
 import * as ReactFauxDOM from 'react-faux-dom'
 import * as d3 from 'd3'
+<<<<<<< HEAD
 // import {Ophion} from 'ophion'
 import 'whatwg-fetch'
 
 ///////////////////////////////////////////////////////////////////////////
 /////////////// OPHION
 ////////////////////////////////////////////////////////////////
+=======
+import {Ophion} from 'ophion'
+import 'whatwg-fetch'
+
+function addLists(a, b) {
+  var longest = a.length > b.length ? a : b
+  var shortest = a.length <= b.length ? a : b
+  return longest.map(function(item, i) {
+    return item + (shortest.length < i ? shortest[i] : 0.0)
+  })
+}
+
+function sampleAverage(responses) {
+  var inverse = 1.0 / responses.length
+  var line = responses.reduce(function(average, curve) {
+    // average.x = addLists(average.x, curve.x)
+    average.y = addLists(average.y, curve.y)
+    return average
+  }, {x: responses[0].x, y: []})
+
+  // line.y = line.y.map(function(m) {return m * inverse})
+  return line
+}
+>>>>>>> dev
 
 
 function value(x) {
@@ -27,6 +52,7 @@ function value(x) {
   return v ? v : x
 }
 
+<<<<<<< HEAD
 function OphionQuery(parent) {
   var parent = parent
   var query = []
@@ -311,6 +337,8 @@ function Ophion() {
   }
 }
 
+=======
+>>>>>>> dev
 var O = Ophion()
 
 
@@ -533,6 +561,10 @@ class DrugResponse extends Component {
     var rawValues = responses.filter(function(x, i) {return (i % 2) === 1})
 
     var summary = rawSummary.map(function(mutant) {
+<<<<<<< HEAD
+=======
+      console.log(mutant)
+>>>>>>> dev
       var response = JSON.parse(mutant)
       var amax = response.filter(function(r) {return r['type'] === 'AUC'}) // 'EC50'}) // 'AMAX'})
       if (!_.isEmpty(amax)) {
