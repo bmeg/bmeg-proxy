@@ -5,13 +5,15 @@ import * as _ from 'underscore'
 // import cytoscape from 'cytoscape'
 // import * as ReactFauxDOM from 'react-faux-dom'
 // import * as d3 from 'd3'
-// import {Ophion} from 'ophion'
+import {Ophion} from 'ophion'
 // import 'whatwg-fetch'
 
 // import {PieChart,VertexViewer,SchemaGraph,foo} from 'ceto'
 // import {PieChart} from 'ceto'
 
 var hasOwn = {}.hasOwnProperty
+
+var o = Ophion();
 
 /*
 ██    ██ ███████ ███████          ██████  █████  ███████ ███████         ██████
