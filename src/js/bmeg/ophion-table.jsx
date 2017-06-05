@@ -90,7 +90,7 @@ export default class OphionTable extends Component {
     ophionQuery.execute(function(ophionObjects){
       console.log(ophionObjects);
       var endTime = new Date();
-      console.log(JSON.stringify(ophionQuery), 'took ',  endTime - startTime, 'ms');      
+      console.log(JSON.stringify(ophionQuery), 'took ',  endTime - startTime, 'ms');
       var mappedOphionData =
         _.map(ophionObjects, function(ophionObject) {
           _.each(_.keys(ophionObject.properties), function(key){
