@@ -75,7 +75,7 @@ export default class OphionSidebar extends Component {
   // projects
   renderProjects = () => {
     var O = Ophion();
-    var ophionQuery = O.query().has("gid", "type:IndividualCohort").outgoing("hasInstance").match([
+    var ophionQuery = O.query().has("gid", "type:Project").outgoing("hasInstance").match([
       O.mark('cohort').values(["gid"]).mark("gid"),
       O.mark('cohort').values(["name"]).mark("name"),
       O.mark("cohort").outEdge('hasMember').count().mark('count')
@@ -100,7 +100,7 @@ export default class OphionSidebar extends Component {
   // gender
   renderGenders = () => {
     var O = Ophion();
-    var ophionQuery = O.query().has("gid","type:Individual").outgoing("hasInstance").groupCount("info.gender");
+    var ophionQuery = O.query().has("gid","type:Individual").outgoing("hasInstance").groupCount("info:gender");
     var _self = this ;
     return <div>
       <OphionFacet
@@ -108,10 +108,11 @@ export default class OphionSidebar extends Component {
         caption='Genders'
         leftIcon='invert_colors'
         afterExecute={ ophionObjects => {
+            console.log(ophionObjects);
             var mappedOphionData = [] ;
             console.log('gender afterExecute',ophionObjects)
-            mappedOphionData.push({name:'FEMALE', gid: '["FEMALE"]', count: ophionObjects[0]['["FEMALE"]'] });
-            mappedOphionData.push({name:'MALE', gid: '["MALE"]', count: ophionObjects[0]['["MALE"]'] });
+            mappedOphionData.push({name:'FEMALE', gid: 'FEMALE', count: ophionObjects[0]['FEMALE'] });
+            mappedOphionData.push({name:'MALE', gid: 'MALE', count: ophionObjects[0]['MALE'] });
             return mappedOphionData;
           }
         }
@@ -129,7 +130,7 @@ export default class OphionSidebar extends Component {
   // tumorStatus
   renderTumorStatus = () => {
     var O = Ophion();
-    var ophionQuery = O.query().has("gid","type:Individual").outgoing("hasInstance").groupCount("info.tumorStatus");
+    var ophionQuery = O.query().has("gid","type:Individual").outgoing("hasInstance").groupCount("info:tumor_status");
     var _self = this ;
     return <div>
       <OphionFacet
@@ -139,13 +140,13 @@ export default class OphionSidebar extends Component {
         afterExecute={ ophionObjects => {
             var mappedOphionData = [] ;
             console.log('tumorStatus afterExecute',ophionObjects)
-            mappedOphionData.push({name:'TUMOR FREE', gid: '["TUMOR FREE"]', count: ophionObjects[0]['["TUMOR FREE"]'] });
-            mappedOphionData.push({name:'WITH TUMOR', gid: '["WITH TUMOR"]', count: ophionObjects[0]['["WITH TUMOR"]'] });
+            mappedOphionData.push({name:'TUMOR FREE', gid: 'TUMOR FREE', count: ophionObjects[0]['TUMOR FREE'] });
+            mappedOphionData.push({name:'WITH TUMOR', gid: 'WITH TUMOR', count: ophionObjects[0]['WITH TUMOR'] });
             return mappedOphionData;
           }
         }
         onItemSelect={item => {
-            console.log('Genders onItemSelect',item,this.props.onTumorStatusSelect)
+            console.log('TumorStatus onItemSelect',item,this.props.onTumorStatusSelect)
             if (_self.props.onTumorStatusSelect) {
               _self.props.onTumorStatusSelect(item);
             }
@@ -161,41 +162,11 @@ export default class OphionSidebar extends Component {
 
   // facet will call this callback for common result processing
   afterExecute(ophionObjects) {
-    var properties = []
-    ophionObjects = _.sortBy(ophionObjects, 'count');
-    console.log(ophionObjects);
-    var mappedOphionData =
-      _.map(ophionObjects, function(ophionObject) {
-        _.each(_.keys(ophionObject.properties), function(key){
-          var parts = key.split('.');
-          if (parts[0] === 'info' && !ophionObject.properties['info']) {
-            ophionObject.properties.info = {};
-          }
-          if (parts[0] === 'info' && !ophionObject.properties.info[parts[1]]) {
-            var val = JSON.parse(ophionObject.properties[key]);
-            if (_.isArray(val)) {
-              if (val.length === 1) {
-                val = val[0]
-              }
-            }
-            ophionObject.properties.info[parts[1]] = val;
-          }
-
-        });
-        if (ophionObject.properties) {
-          properties = _.union(properties, _.keys(ophionObject.properties));
-          properties = _.without(properties, 'info')
-          return(ophionObject.properties);
-        } else {
-          properties = _.union(properties, _.keys(ophionObject));
-          properties = _.without(properties, 'info')
-          return(ophionObject);
-        }
-      }) ;
-
-    console.log('mappedOphionData.length', mappedOphionData.length);
-    console.log('mappedOphionData', mappedOphionData);
-    return mappedOphionData;
+    return ophionObjects;
+    // NOOP, simply log returned data
+    console.log('ophionObjects.length', ophionObjects.length);
+    console.log('ophionObjects', ophionObjects);
+    return ophionObjects;
   }
 
   // react render component
