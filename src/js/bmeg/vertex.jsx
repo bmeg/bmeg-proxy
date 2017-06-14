@@ -11,7 +11,9 @@ import 'whatwg-fetch'
 // import {PieChart,VertexViewer,SchemaGraph,foo} from 'ceto'
 // import {PieChart} from 'ceto'
 
+var loadingSpinner = '/img/ripple.gif'
 var hasOwn = {}.hasOwnProperty
+var O = Ophion()
 
 function classNames () {
   var classes = []
@@ -58,6 +60,11 @@ function sampleAverage(responses) {
   return line
 }
 
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////// BMEG.IO
+//////////////////////////////////////////////////////////////
+
 var PubmedLink = function(props) {
   var url = "https://www.ncbi.nlm.nih.gov/pubmed/" + props.id
   return (<div><a href={url} target="_blank">{url}</a></div>)
@@ -65,86 +72,101 @@ var PubmedLink = function(props) {
 
 var queries = {
   schema: function(callback) {
-    fetch('/gaia/schema/protograph').then(function(response) {
+    fetch('/schema/protograph').then(function(response) {
       response.json().then(callback)
     })
   },
 
   firstVertex: function(label) {
     return function(callback) {
-      Ophion().query().label(label).limit(1).execute(function(result) {
+      O.query().has("gid", "type:" + label).outgoing("hasInstance").limit(1).execute(function(result) {
+        console.log('firstVertex')
         console.log(result)
-        callback(result.result[0])
+        callback(result[0])
       })
     }
   },
 
   variantTypeCounts: function(gene) {
     return function(callback) {
-      Ophion().query().has("gid", ["gene:" + gene]).incoming("affectsGene").outgoing("termFor").groupCount("variant").by("term").cap(["variant"]).execute(function(result) {
+      // O.query().has("gid", "gene:" + gene).incoming("affectsGene").outgoing("termFor").groupCount("variant").execute(function(result) {
+      O.query().has("gid", "gene:" + gene).inEdge("variantInGene").groupCount("term").execute(function(result) {
+        console.log('variantTypeCounts')
         console.log(result)
-        callback(result.result[0])
+        callback(result[0])
       })
     }
   },
 
   mutationCounts: function(gene) {
     return function(callback) {
-      Ophion().query().has("gid", ["gene:" + gene]).incoming("affectsGene").incoming("transcriptEffectOf").outgoing("annotationFor").outgoing("inCallSet").outgoing("callsFor").outgoing("diseaseOf").groupCount("term").by("term").cap(["term"]).execute(function(result) {
+      // O.query().has("gid", "gene:" + gene).incoming("affectsGene").incoming("transcriptEffectOf").outgoing("annotationFor").outgoing("inCallSet").outgoing("callsFor").outgoing("diseaseOf").groupCount("term").execute(function(result) {
+      O.query().has("gid", "gene:" + gene).incoming("variantInGene").outgoing("variantInBiosample").outgoing("termForDisease").groupCount("term").execute(function(result) {
+        console.log('mutationCounts')
         console.log(result)
-        callback(result.result[0])
+        callback(result[0])
       })
     }
   },
 
   geneExists: function(gene, callback) {
-    Ophion().query().has("gid", ["gene:" + gene]).execute(function(result) {
+    O.query().has("gid", "gene:" + gene).execute(function(result) {
+      console.log('geneExists')
       console.log(result)
-      callback(!_.isEmpty(result.result))
+      callback(!_.isEmpty(result[0]))
     })
   },
 
   cohortCompounds: function(cohort) {
     return function(callback) {
-      Ophion().query().has("gid", ["type:Compound"]).outgoing("hasInstance").values(["gid"]).execute(function(result) {
-        // Ophion().query().has("gid", ["cohort:" + cohort]).outgoing("hasMember").incoming("responseOf").outgoing("responseTo").dedup().values(["gid"]).execute(function(result) {
-        
+      O.query().has("gid", "type:Compound").outgoing("hasInstance").values(["gid"]).execute(function(result) {
+        console.log('cohortCompounds')
         console.log(result)
-        callback(result.result)
+        callback(result)
       })
     }
   },
 
   cohortGids: function(cohort) {
     return function(callback) {
-      Ophion().query().has("gid", ["cohort:" + cohort]).outgoing("hasMember").mark("a").incoming("callsFor").select(["a"]).values(["gid"]).execute(function(result) {
+      O.query().has("gid", "cohort:" + cohort).outgoing("hasSample").values(["gid"]).execute(function(result) {
+        console.log('cohortGids')
         console.log(result)
-        callback(result.result)
+        callback(result)
       })
     }
   },
 
   samplesWithMutations: function(cohort, gene) {
     return function(callback) {
-      Ophion().query().has("gid", ["gene:" + gene] ).incoming("affectsGene").incoming("transcriptEffectOf").outgoing("annotationFor").outgoing("inCallSet").outgoing("callsFor").mark("a").incoming("hasMember").has("gid", ["cohort:" + cohort]).select(["a"]).values(["gid"]).execute(function(result) {
+      O.query().has("gid", "gene:" + gene).incoming("variantInGene").outgoing("variantInBiosample").dedup().mark("a").incoming("hasSample").has("gid", "cohort:" + cohort).select(["a"]).values(["gid"]).execute(function(result) {
+        console.log('samplesWithMutations')
         console.log(result)
-        callback(result.result)
+        callback(result)
       })
     }
   },
 
   sampleResponses: function(samples, drug) {
     return function(callback) {
-      Ophion().query().has("gid", ['compound:' + drug]).incoming("responseTo").mark('a').outgoing('responseOf').has("gid", samples).select(['a']).values(['responseSummary', 'responseValues']).execute(function(result) {
+      console.log(samples)
+      console.log(_.map(samples, value))
+      O.query().has("gid", 'compound:' + drug).inEdge("responseToCompound").mark('a').outVertex().has("gid", O.within(samples)).select(['a']).values(['responseSummary', 'responseValues']).execute(function(result) {
+        console.log('sampleResponses')
         console.log(result)
-        callback(result.result)
+        callback(result)
       })
     }
   },
 
   cnaCallsByGene: function(cohort, gene) {
-    // O.query().has("gid", "cohort:CCLE").outgoing("hasMember").incoming("cnaCallsFor").incoming("inCNACallSet").outgoing("calledInGene").execute()
-    // group by gene symbol, average cna value 
+    return function(callback) {
+      O.query().has("gid", "cohort:" + cohort).outgoing("hasMember").incoming("cnaCallsFor").incoming("inCNACallSet").outgoing("calledInGene").execute()
+      // group by gene symbol, average cna value
+      console.log('cnaCallsByGene')
+      console.log(result)
+      callback(result)
+    }
   }
 }
 
@@ -167,6 +189,7 @@ function generateVisualizations() {
 
   return {
     'Gene': [variantTypePie, mutationPie],
+    // 'Gene': [mutationPie],
     'Pubmed': [pubmedLink],
     'Cohort': [drugResponse]
   }
@@ -195,10 +218,10 @@ var keyify = function(s) {
 
 var PieChart = React.createClass({
   getInitialState: function() {
-    var pie = <div><img src='/static/ripple.gif' /></div>
+    var pie = <div><img src={loadingSpinner} /></div>
         return {pie: pie}
   },
-  
+
   buildPie: function(data) {
     var cohort = Object.keys(data).map(function(key) {
       return {"title": key, "value": data[key]}
@@ -209,9 +232,11 @@ var PieChart = React.createClass({
     })
 
     var el = ReactFauxDOM.createElement('svg')
+    var height = Object.keys(data).length * 20
+    height = height < 300 ? 300 : height
     el.setAttribute('width', 800)
-    el.setAttribute('height', 300)
-    
+    el.setAttribute('height', height)
+
     var pie = d3.pie().value(function(d) {return d.value})
     var slices = pie(cohort)
     var arc = d3.arc().innerRadius(0).outerRadius(100)
@@ -219,7 +244,7 @@ var PieChart = React.createClass({
 
     var svg = d3.select(el)
     var g = svg.append('g').attr('transform', 'translate(300, 100)')
-    
+
     g.selectAll('path.piechart')
       .data(slices, function(d) {return d.data.title})
       .enter()
@@ -227,7 +252,7 @@ var PieChart = React.createClass({
       .attr('class', function(d) {return 'slice ' + keyify(d.data.title)})
       .attr('d', arc)
       .attr('fill', function(d) {return color(d.data.title)})
-    
+
     svg.append('g')
       .attr('class', 'legend')
       .selectAll('text')
@@ -237,13 +262,13 @@ var PieChart = React.createClass({
       .text(function(d) { return '- ' + d.data.title })
       .attr('fill', function(d) { return color(d.data.title) })
       .attr('y', function(d, i) { return 20 * (i + 1) })
-      .on("mouseover", function(dOver, i) { 
+      .on("mouseover", function(dOver, i) {
         console.log("mouseover " + keyify(dOver.data.title))
         var key = keyify(dOver.data.title)
         d3.selectAll('.slice.' + key)
           .attr('fill', 'white')
       })
-      .on("mouseout", function(dOut, i) { 
+      .on("mouseout", function(dOut, i) {
         console.log("mouseout " + keyify(dOut.data.title))
         var key = keyify(dOut.data.title)
         d3.selectAll('.slice.' + key)
@@ -264,7 +289,7 @@ var PieChart = React.createClass({
       }.bind(this))
     }
   },
-  
+
   render: function() {
     return (
         <div>{this.state.pie}</div>
@@ -340,7 +365,6 @@ class DrugSelect extends Component {
     var self = this
     this.fetchCompounds(function(drugs) {
       var plain = drugs.map(function(drug) {return drug.slice(9)}).sort()
-      console.log(plain)
       self.setState({drugs: plain, loaded: true, selected: plain[0]})
       self.props.selectDrug(plain[0])
     })
@@ -391,7 +415,6 @@ class DrugResponse extends Component {
   componentDidMount() {
     var self = this
     this.fetchSamples(function(samples) {
-      console.log(samples)
       self.setState({samples: samples})
     })
   }
@@ -462,8 +485,8 @@ class DrugResponse extends Component {
 
                 Plotly.newPlot(
                   'response-plot',
-                  [{name: 'mutation samples', y: mutantResponses.summary, type: 'box'},
-                   {name: 'normal samples', y: normalResponses.summary, type: 'box'}]
+                  [{name: 'normal samples', y: normalResponses.summary, type: 'box'},
+                   {name: 'mutation samples', y: mutantResponses.summary, type: 'box'}]
                 )
 
                 var normalAverage = sampleAverage(normalResponses.values)
@@ -605,7 +628,6 @@ var PropertiesView = function(props) {
 }
 
 var EdgesView = function(props) {
-  console.log(props)
   var inEdges = Object.keys(props.vertex['in'])
   // Filter out edges with "hasInstance" in label
       .filter(key => key != 'hasInstance')
@@ -699,7 +721,7 @@ var Expando = React.createClass({
     var rootClassName = classNames("expando", "mdl-collapse", "mdl-navigation", {
       "mdl-collapse--opened": !this.state.collapsed,
     })
-    
+
     return (<div className={rootClassName}>
             <a className="mdl-navigation__link mdl-collapse__button expando-header" onClick={this.onClick}>
             <i className="material-icons mdl-collapse__icon mdl-animation--default">expand_more</i>
@@ -724,7 +746,7 @@ function extractLabel(label) {
 }
 
 function fetchVertex(gid, callback) {
-  fetch("/gaia/vertex/find/" + gid).then(function(response) {return response.json()}).then(callback)
+  fetch("/vertex/find/" + gid).then(function(response) {return response.json()}).then(callback)
 }
 
 var VertexViewer = React.createClass({
@@ -786,7 +808,7 @@ var VertexViewer = React.createClass({
     var loading = ""
     var we = this
     if (this.state.loading) {
-      loading = <img src="/static/ripple.gif" width="50px" />
+      loading = <img src="/img/ripple.gif" width="50px" />
     }
 
     var error
@@ -808,7 +830,7 @@ var VertexViewer = React.createClass({
       properties = (<div><PropertiesView vertex={this.state.vertex} /><EdgesView vertex={this.state.vertex} navigate={this.setVertex} /></div>)
 
       if (this.props.visualizations) {
-        var label = this.state.vertex.type || this.state.vertex.properties.label || this.state.vertex.properties['#label'] || this.state.vertex.properties.type || extractLabel(this.state.vertex.properties.gid)
+        var label = this.state.vertex.label || this.state.vertex.properties.label || this.state.vertex.properties['#label'] || this.state.vertex.properties.type || extractLabel(this.state.vertex.gid)
         console.log("label: " + label)
         if (this.props.visualizations[label]) {
           console.log("visualizations found: " + this.props.visualizations[label].length)
@@ -881,7 +903,7 @@ function schemaToCytoscape(schema) {
       var vertex = schema['vertexes'][key]
       return {data: {id: vertex.gid, name: vertex.label}}
     })
-    
+
     var edges = _.flatten(Object.keys(schema['in']).map(function(key) {
       return schema['in'][key].map(function(edge) {
         return {data: {source: edge['in'], target: edge['out'], label: edge['label']}}
@@ -899,6 +921,37 @@ class SchemaGraph extends Component {
   constructor(props){
     super(props)
     this.renderCytoscape = this.renderCytoscape.bind(this)
+    this.schemaPositions = {
+      Project: [0.0, 0.5],
+      Individual: [0.15, 0.5],
+      Cohort: [0.15, 0.3],
+      Biosample: [0.3, 0.5],
+      GeneExpression: [0.5, 0.2],
+      Variant: [0.5, 0.35],
+      CNASegment: [0.5, 0.5],
+      Compound: [0.5, 0.65],
+      Predictor: [0.5, 0.8],
+      OntologyTerm: [0.5, 0.95],
+      LinearSignature: [0.65, 0.75],
+      PhenotypeInstance: [0.65, 0.9],
+      Gene: [0.7, 0.5],
+      GeneDatabase: [0.85, 0.35],
+      Pubmed: [0.85, 0.5],
+      GeneFamily: [0.85, 0.65],
+    }
+  }
+
+  calculatePositions(width, height) {
+    var self = this;
+    return Object.keys(this.schemaPositions).reduce(function(positions, key) {
+      var ratio = self.schemaPositions[key]
+      if (ratio) {
+        positions[key] = {x: ratio[0] * width, y: ratio[1] * height}
+      } else {
+        positions[key] = {x: 100, y: 100}
+      }
+      return positions
+    }, {})
   }
 
   renderCytoscape() {
@@ -908,19 +961,25 @@ class SchemaGraph extends Component {
     var edgeColor = '#f22f08'
     var edgeText = '#ffffff'
 
+    var radius = Math.min(this.props.width, this.props.height) * 0.08;
+
     var cyelement = this.refs.cytoscape
     this.cy = cytoscape({
       container: cyelement,
       // container: document.getElementById('cy'),
       boxSelectionEnabled: false,
       autounselectify: true,
-
+      // zoomingEnabled: false,
+      userZoomingEnabled: false,
+      // panningEnabled: false,
+      userPanningEnabled: false,
+      
       style: cytoscape.stylesheet()
         .selector('node')
         .css({
           'content': 'data(name)',
-          'height': 80,
-          'width': 80,
+          'height': radius, // 80
+          'width': radius, // 80
           'background-fit': 'cover',
           'background-color': nodeColor,
           // 'border-color': '#000',
@@ -929,37 +988,46 @@ class SchemaGraph extends Component {
           // 'shape': 'roundrectangle',
           'color': nodeText,
           'font-family': '"Lucida Sans Unicode", "Lucida Grande", sans-serif',
-          'font-size': 24,
+          'font-size': radius * 0.24, // 24
           'text-outline-color': nodeColor,
-          'text-outline-width': 3,
+          'text-outline-width': radius * 0.03, // 3,
           'text-valign': 'center'
         })
 
         .selector('edge')
         .css({
           'content': 'data(label)',
-          'width': 6,
+          'width': radius * 0.06,
           'edge-text-rotation': 'autorotate',
           'target-arrow-shape': 'triangle',
           'line-color': edgeColor,
           'target-arrow-color': edgeColor,
           'curve-style': 'bezier',
           'color': edgeText,
-          'font-size': 18,
+          'font-size': radius * 0.18, // 18
           'text-outline-color': edgeColor,
-          'text-outline-width': 2,
+          'text-outline-width': radius * 0.02, // 2
         }),
 
       elements: schemaToCytoscape(this.props.schema)
     })
 
     this.layout = this.cy.makeLayout({
-      name: 'cose' // ,
+      name: 'preset',
+      positions: this.calculatePositions(this.props.width, this.props.height)
       // animate: true,
       // padding: 30,
       // animationThreshold: 250,
       // refresh: 20
     })
+
+    // this.layout = this.cy.makeLayout({
+    //   name: 'cose' // ,
+    //   // animate: true,
+    //   // padding: 30,
+    //   // animationThreshold: 250,
+    //   // refresh: 20
+    // })
   }
 
   componentDidMount() {
@@ -969,7 +1037,7 @@ class SchemaGraph extends Component {
 
   shouldComponentUpdate() {
     return false
-  }  
+  }
 
   componentWillReceiveProps(props) {
     var next = schemaToCytoscape(props.schema)
@@ -992,14 +1060,14 @@ class SchemaGraph extends Component {
 
   render(){
     let containerStyle = {
-      height: this.props.height || '1000px',
-      width: this.props.width || '1000px'
+      height: this.props.height || '100px',
+      width: this.props.width || '100px'
     }
 
     return(
-        <div>
+      <div>
         <div id="cy" style={containerStyle} ref="cytoscape" />
-        </div>
+      </div>
     )
   }
 }
@@ -1067,7 +1135,7 @@ class SchemaViewer extends Component {
         var query = queries.firstVertex(label)
         query(function(result) {
           console.log(result)
-          self.setState({schema: self.state.schema, label: label.toLowerCase(), gid: result.properties.gid})
+          self.setState({schema: self.state.schema, label: label.toLowerCase(), gid: result.gid})
         })
       }
     }
@@ -1075,6 +1143,7 @@ class SchemaViewer extends Component {
 
   componentDidMount() {
     console.log('mounting')
+    console.log(this.props);
 
     var params = urlParams()
     console.log(params)
@@ -1095,15 +1164,15 @@ class SchemaViewer extends Component {
     var elements = []
     if (this.state.gid) {
       var vertex = <VertexViewer key="vertex" label={this.state.label} input={this.state.gid} visualizations={generateVisualizations()} />
-          elements.push(vertex)
+      elements.push(vertex)
     } else if (this.state.loaded) {
       var schema = <SchemaGraph key="schema" ref="schema" width={this.props.width} height={this.props.height} schema={this.state.schema} />
-          elements.push(schema)
+      elements.push(schema)
     } else {
-      elements.push(<div key="loading"><img src='/static/ripple.gif' /></div>)
+      elements.push(<div key="loading"><img src={loadingSpinner} /></div>)
     }
     return (
-        <div>
+      <div>
         {elements}
       </div>
     )
@@ -1123,8 +1192,9 @@ function schema(router) {
 }
 
 function schemaViewer(router) {
-  var width = 800
-  var height = 800
+  var parent = document.getElementById('vertex-explore');
+  var width = parent.clientWidth;
+  var height = window.innerHeight - 100;
   render(<SchemaViewer width={width} height={height} schema={schema} />, document.getElementById('vertex-explore'))
 }
 
