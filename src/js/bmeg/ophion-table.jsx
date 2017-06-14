@@ -96,11 +96,15 @@ export default class OphionTable extends Component {
     var lower = this.state.pageSize * this.state.page;
     var upper = lower + this.state.pageSize ;
     console.log('_query', {lower: lower, upper: upper});
+    console.log('_query sorted', this.state.sorted);
+    _.each(this.state.sorted, function(s) {
+      pagingQuery = pagingQuery.order(s.id, !s.desc);
+    })
     this.setState({loading: true})
     pagingQuery.range(lower,upper).execute(function(ophionObjects){
       console.log('ophionObjects', ophionObjects);
       var endTime = new Date();
-      console.log(JSON.stringify(ophionQuery), 'took ',  endTime - startTime, 'ms');
+      console.log(JSON.stringify(pagingQuery), 'took ',  endTime - startTime, 'ms');
       var mappedOphionData = [];
       if (ophionObjects.length === 1 && ophionObjects[0] === "") {
         mappedOphionData = []
@@ -189,8 +193,9 @@ export default class OphionTable extends Component {
   handleSortedChange = (sorted) => {
     console.log('handleSortedChange', sorted);
     sorted.page = 0 ;
-    this.setState(sorted);
-    this._query(this.props.query);
+    this.setState(sorted, function() {
+      this._query(this.props.query);
+    } ) ;
   };
 
 
