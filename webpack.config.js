@@ -10,7 +10,8 @@ var config = {
   entry: {
     vertex: ['whatwg-fetch', APP_DIR + '/vertex.jsx'],
     cohorts: [APP_DIR + '/cohorts.jsx'],
-    response: [APP_DIR + '/response.jsx']
+    response: [APP_DIR + '/response.jsx'],
+    search: [APP_DIR + '/search.jsx']
   } ,
   resolve: {
     extensions: [".js", ".json", ".css"]

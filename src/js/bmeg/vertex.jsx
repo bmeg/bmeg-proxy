@@ -331,20 +331,17 @@ class GeneInput extends Component {
   render() {
     return <div
     className="mdl-textfield mdl-js-textfield mdl-textfield--floating-label"
-    ref="mdlWrapper"
-      >
+    ref="mdlWrapper">
       <label
     className="mdl-textfield__label"
-    htmlFor="vertex-gid-input"
-      >Enter a gene name</label>
+    htmlFor="vertex-gid-input">Enter a gene name</label>
       <input
     id="gene-response-input"
     type="text"
     name="gene"
     className="mdl-textfield__input"
     onChange={e => this.props.onChange(e.target.value)}
-    value={this.props.value}
-      />
+    value={this.props.value} />
       </div>
   }
 }
