@@ -15,6 +15,7 @@ export default class OphionTable extends Component {
 
   constructor(props) {
     super(props);
+    console.log('OphionTable contructor')
 
     /* initial state */
     this.state = {
@@ -22,7 +23,10 @@ export default class OphionTable extends Component {
       source: [],
       sorted: [],
       page: 0,
-      pageSize: 10
+      pages: 1,
+      max_pages: null,
+      pageSize: 10,
+      loading: true
     };
 
     // TODO known issue, clicking on the column header produces warning. not sure why
@@ -72,68 +76,86 @@ export default class OphionTable extends Component {
   componentWillReceiveProps(nextProps) {
     console.log('componentWillReceiveProps',this, nextProps);
     if (JSON.stringify(this.props.query) !== JSON.stringify(nextProps.query)) {
-      this._query(nextProps.query);
+      this.handlePageChange({page: 0})
     }
   }
 
   componentWillMount() {
     console.log('componentWillMount',this);
-    this._query(this.props.query);
+    this.handlePageChange({page: 0})
   }
 
   _query(ophionQuery) {
-    // given filter:[] 'fetch' the data
-    // TODO - apply filter, limit, paging
     var _self = this;
     var properties = []
     var startTime = new Date();
-    ophionQuery.execute(function(ophionObjects){
-      console.log(ophionObjects);
-      var endTime = new Date();
-      console.log(JSON.stringify(ophionQuery), 'took ',  endTime - startTime, 'ms');
-      var mappedOphionData =
-        _.map(ophionObjects, function(ophionObject) {
-          _.each(_.keys(ophionObject.properties), function(key){
-            var parts = key.split('.');
-            if (parts[0] === 'info' && !ophionObject.properties['info']) {
-              ophionObject.properties.info = {};
-            }
-            if (parts[0] === 'info' && !ophionObject.properties.info[parts[1]]) {
-              var val = JSON.parse(ophionObject.properties[key]);
-              if (_.isArray(val)) {
-                if (val.length === 1) {
-                  val = val[0]
-                }
-              }
-              ophionObject.properties.info[parts[1]] = val;
-            }
+    // copy the query so we can alter it with range()
+    var pagingQuery = Ophion().query()
+    pagingQuery.query.push.apply(pagingQuery.query, JSON.parse(JSON.stringify(ophionQuery)).query)
 
-          });
-          if (ophionObject.properties) {
-            properties = _.union(properties, _.keys(ophionObject.properties));
-            properties = _.without(properties, 'info')
-            return(ophionObject.properties);
-          } else {
-            properties = _.union(properties, _.keys(ophionObject));
-            properties = _.without(properties, 'info')
-            return(ophionObject);
+    var lower = this.state.pageSize * this.state.page;
+    var upper = lower + this.state.pageSize ;
+    console.log('_query', {lower: lower, upper: upper});
+    console.log('_query sorted', this.state.sorted);
+    _.each(this.state.sorted, function(s) {
+      pagingQuery = pagingQuery.order(s.id, !s.desc);
+    })
+    this.setState({loading: true})
+    pagingQuery.range(lower,upper).execute(function(ophionObjects){
+      console.log('ophionObjects', ophionObjects);
+      var endTime = new Date();
+      console.log(JSON.stringify(pagingQuery), 'took ',  endTime - startTime, 'ms');
+      var mappedOphionData = [];
+      if (ophionObjects.length === 1 && ophionObjects[0] === "") {
+        mappedOphionData = []
+      } else {
+        mappedOphionData =
+          _.map(ophionObjects, function(ophionObject) {
+            if (ophionObject.properties) {
+              properties = _.union(properties, _.keys(ophionObject.properties));
+              properties = _.without(properties, 'info')
+              return(ophionObject.properties);
+            } else {
+              properties = _.union(properties, _.keys(ophionObject));
+              properties = _.without(properties, 'info')
+              return(ophionObject);
+            }
+          }) ;
+        // add properties to table, hide if hidden or starts with '#'
+        _.each(properties, function(property)  {
+          var col = {accessor: property, Header:property }
+          if (_.contains(_self.props.hiddenProperties, property) || property.startsWith('#')) {
+            col.show = false;
           }
-        }) ;
-      // add properties to table, hide if hidden or starts with '#'
-      _.each(properties, function(property)  {
-        var col = {accessor: property, Header:property }
-        if (_.contains(_self.props.hiddenProperties, property) || property.startsWith('#')) {
-          col.show = false;
-        }
-        var already = _.find(_self.columns, function(c) { return c.accessor === col.accessor})
-        if (!already) {
-          _self.columns.push(col);
-        }
-      } ) ;
-      console.log('columns.length', _self.columns.length);
+          var already = _.find(_self.columns, function(c) { return c.accessor === col.accessor})
+          if (!already) {
+            _self.columns.push(col);
+          }
+        } ) ;
+      }
+
+      var new_pages = _self.state.pages;
+      var max_pages = _self.state.max_pages;
+      // increment if we get data
+      if (mappedOphionData.length > 0) {
+        new_pages += 1;
+      } else {
+        max_pages = new_pages;
+      }
+      // don't go past max_pages
+      if (max_pages) {
+        new_pages = max_pages;
+      }
+
       console.log('mappedOphionData.length', mappedOphionData.length);
       console.log('mappedOphionData', mappedOphionData);
-      _self.setState({source: mappedOphionData});
+      _self.setState({
+        source: mappedOphionData,
+        loading: false,
+        pages: new_pages,
+        max_pages: max_pages
+      });
+
     });
   }
 
@@ -161,19 +183,40 @@ export default class OphionTable extends Component {
   };
 
 
+  handlePageChange = (page) => {
+    this.setState(page, function() {
+      this._query(this.props.query);
+    } ) ;
+  };
+
+
+  handleSortedChange = (sorted) => {
+    console.log('handleSortedChange', sorted);
+    sorted.page = 0 ;
+    this.setState(sorted, function() {
+      this._query(this.props.query);
+    } ) ;
+  };
+
+
   render() {
     // ophion data and all members
     return (
       <div>
         <ReactTable
+          manual // Forces table not to paginate or sort automatically, so we can handle it server-side
+          className='-striped -highlight'
+          pages={this.state.pages}
           data={this.state.source}
+          loading={this.state.loading} // Display the loading overlay when we need it
           columns={this.columns}
           sorted={this.state.sorted}
           page={this.state.page}
           pageSize={this.state.pageSize}
-          onSortedChange={sorted => this.setState({sorted})}
-          onPageChange={page => this.setState({page})}
+          onSortedChange={sorted => this.handleSortedChange({sorted})}
+          onPageChange={page => this.handlePageChange({page})}
           onPageSizeChange={(pageSize, page) => this.setState({page, pageSize})}
+          onFetchData={this.fetchData} // Request new data when things change
           getTdProps={(state, rowInfo, column, instance) => {
             return {
               onClick: e => {
