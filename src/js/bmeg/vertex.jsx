@@ -139,7 +139,7 @@ var queries = {
 
   samplesWithMutations: function(cohort, gene) {
     return function(callback) {
-      O.query().has("gid", "gene:" + gene).incoming("variantInGene").outgoing("variantInBiosample").dedup().mark("a").incoming("hasSample").has("gid", "cohort:" + cohort).select(["a"]).values(["gid"]).execute(function(result) {
+      O.query().has("gid", "gene:" + gene).incoming("variantInGene").dedup().outgoing("variantInBiosample").dedup().mark("a").incoming("hasSample").has("gid", "cohort:" + cohort).select(["a"]).values(["gid"]).execute(function(result) {
         console.log('samplesWithMutations')
         console.log(result)
         callback(result)
