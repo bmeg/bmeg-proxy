@@ -19,22 +19,22 @@ function classNames () {
   var classes = []
 
   for (var i = 0; i < arguments.length; i++) {
-	var arg = arguments[i]
-	if (!arg) continue
+    var arg = arguments[i]
+    if (!arg) continue
 
-	var argType = typeof arg
+    var argType = typeof arg
 
-	if (argType === 'string' || argType === 'number') {
-	  classes.push(arg)
-	} else if (Array.isArray(arg)) {
-	  classes.push(classNames.apply(null, arg))
-	} else if (argType === 'object') {
-	  for (var key in arg) {
-		if (hasOwn.call(arg, key) && arg[key]) {
-		  classes.push(key)
-		}
-	  }
-	}
+    if (argType === 'string' || argType === 'number') {
+      classes.push(arg)
+    } else if (Array.isArray(arg)) {
+      classes.push(classNames.apply(null, arg))
+    } else if (argType === 'object') {
+      for (var key in arg) {
+        if (hasOwn.call(arg, key) && arg[key]) {
+          classes.push(key)
+        }
+      }
+    }
   }
 
   return classes.join(' ')
@@ -150,7 +150,6 @@ var queries = {
   sampleResponses: function(samples, drug) {
     return function(callback) {
       console.log(samples)
-      console.log(_.map(samples, value))
       O.query().has("gid", 'compound:' + drug).inEdge("responseToCompound").mark('a').outVertex().has("gid", O.within(samples)).select(['a']).values(['responseSummary', 'responseValues']).execute(function(result) {
         console.log('sampleResponses')
         console.log(result)
@@ -522,7 +521,7 @@ class DrugResponse extends Component {
 
   render() {
     return (
-      <div>
+        <div>
         <span className="informative-header">Drug response for samples with a given mutation vs those without that mutation</span>
         <GeneInput value={this.state.input} onChange={this.setGene.bind(this)} />
         <DrugSelect ref="drugselect" cohort={this.props.cohort} selectDrug={this.selectDrug.bind(this)} />
@@ -821,7 +820,7 @@ var VertexViewer = React.createClass({
     var spacing = <div key="spacing" className="spacing"></div>
 
     var properties = <div className="empty-vertex">{emptyMessage}</div>
-    var visualizations = []
+      var visualizations = []
 
     if (this.state.vertex.properties) {
       properties = (<div><PropertiesView vertex={this.state.vertex} /><EdgesView vertex={this.state.vertex} navigate={this.setVertex} /></div>)
@@ -1062,9 +1061,9 @@ class SchemaGraph extends Component {
     }
 
     return(
-      <div>
+        <div>
         <div id="cy" style={containerStyle} ref="cytoscape" />
-      </div>
+        </div>
     )
   }
 }
@@ -1161,15 +1160,15 @@ class SchemaViewer extends Component {
     var elements = []
     if (this.state.gid) {
       var vertex = <VertexViewer key="vertex" label={this.state.label} input={this.state.gid} visualizations={generateVisualizations()} />
-      elements.push(vertex)
+          elements.push(vertex)
     } else if (this.state.loaded) {
       var schema = <SchemaGraph key="schema" ref="schema" width={this.props.width} height={this.props.height} schema={this.state.schema} />
-      elements.push(schema)
+          elements.push(schema)
     } else {
       elements.push(<div key="loading"><img src={loadingSpinner} /></div>)
     }
     return (
-      <div>
+        <div>
         {elements}
       </div>
     )
