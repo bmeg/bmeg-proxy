@@ -78,18 +78,22 @@ class OphionSearch extends Component {
       return <OphionColumn key={label} label={label} items={column} />
     })
 
-    return <div>
+    return (
       <div>
-      <input type="text" onChange={this.handleChange.bind(this)} />
+      <div>
+      <input className="mdl-textfield__input mdl-color--grey-100" type="text" onChange={this.handleChange.bind(this)} />
       </div>
       <div>
       {columns}
       </div>
       </div>
+    )      
   }
 }
 
 // when page loads, render component
+var previousonload = window.onload
 window.onload = function() {
+  previousonload()
   render(<OphionSearch name="All" filter="" />, document.getElementById('ophion-search'));
 }

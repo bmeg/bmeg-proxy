@@ -301,16 +301,16 @@ var PieChart = React.createClass({
 
 
 
-function mdlCleanUp() {
-  var mdlInputs = document.getElementsByClassName('mdl-js-textfield')
-  console.log(mdlInputs)
-  for (var i = 0, l = mdlInputs.length; i < l; i++) {
-    var mdl = mdlInputs[i]
-    if (mdl.MaterialTextfield) {
-      mdl.MaterialTextfield.checkDirty()
-    }
-  }
-}
+// function mdlCleanUp() {
+//   var mdlInputs = document.getElementsByClassName('mdl-js-textfield')
+//   console.log(mdlInputs)
+//   for (var i = 0, l = mdlInputs.length; i < l; i++) {
+//     var mdl = mdlInputs[i]
+//     if (mdl.MaterialTextfield) {
+//       mdl.MaterialTextfield.checkDirty()
+//     }
+//   }
+// }
 
 /////////////////////////////////////////////////////////
 /////////////// DRUG RESPONSE
@@ -577,14 +577,18 @@ var VertexEdges = React.createClass({
 
   render: function() {
     var props = this.props
-    var prefix = props.edges[0].split(':')[0]
+    var prefix = (props.edges[0]['in'] || props.edges[0]['out']).split(':')[0]
     var header = <span>{props.label + ' '}<span className="edge-direction">({props.direction} {prefix})</span></span>
 
-    var items = props.edges.map(gid => (
-        <ExpandoItem key={gid}>
-        <a onClick={() => props.navigate(gid)}>{snipPrefix(gid)}</a>
+    var items = props.edges.map(function(gid) {
+      var vertexGid = gid['in'] || gid['out']
+      var edgeGid = {from: gid['in'] || props.gid, label: props.label, to: gid['out'] || props.gid};
+      return (
+        <ExpandoItem key={vertexGid}>
+          <a onClick={() => props.navigate(edgeGid)}>{snipPrefix(vertexGid)}</a>
         </ExpandoItem>
-    ))
+      )
+    });
 
     return <Expando header={header}>{items}</Expando>
   }
@@ -630,18 +634,21 @@ var EdgesView = function(props) {
       .map(function(key) {
         return <VertexEdges
         key={key}
+        gid={props.vertex['gid']}
         label={key}
         navigate={props.navigate}
         edges={props.vertex['in'][key]}
         direction="from"
           />
       })
+
   var outEdges = Object.keys(props.vertex['out'])
   // Filter out edges with "hasInstance" in label
       .filter(key => key != 'hasInstance')
       .map(function(key) {
         return <VertexEdges
         key={key}
+        gid={props.vertex['gid']}
         label={key}
         navigate={props.navigate}
         edges={props.vertex['out'][key]}
@@ -665,15 +672,35 @@ var EdgesView = function(props) {
   )
 }
 
+var VertexesView = function(props) {
+  var from = props.edge['out']
+  var to = props.edge['in']
+
+  return (
+      <div>
+      <div className="vertex-edges-wrapper">
+      <div className="vertex-in-edges vertex-edges">
+      <h4>From Vertex</h4>
+      <a onClick={() => props.navigate(from)}>{snipPrefix(from)}</a>
+      </div>
+      <div className="vertex-out-edges vertex-edges">
+      <h4>To Vertex</h4>
+      <a onClick={() => props.navigate(to)}>{snipPrefix(to)}</a>
+      </div>
+      </div>
+      </div>
+  )
+}
+
 var VertexInput = React.createClass({
   componentDidMount() {
     componentHandler.upgradeElement(this.refs.mdlWrapper)
-    mdlCleanUp()
+    // mdlCleanUp()
   },
 
   componentDidUpdate() {
     componentHandler.upgradeElement(this.refs.mdlWrapper)
-    mdlCleanUp()
+    // mdlCleanUp()
   },
 
   render() {
@@ -718,17 +745,18 @@ var Expando = React.createClass({
       "mdl-collapse--opened": !this.state.collapsed,
     })
 
-    return (<div className={rootClassName}>
-            <a className="mdl-navigation__link mdl-collapse__button expando-header" onClick={this.onClick}>
-            <i className="material-icons mdl-collapse__icon mdl-animation--default">expand_more</i>
-            {props.header}
-            </a>
-            <div className="mdl-collapse__content-wrapper expando-content">
-            <div className="mdl-collapse__content mdl-animation--default" ref="content">
-            {props.children}
-            </div>
-            </div>
-            </div>)
+    return (
+        <div className={rootClassName}>
+        <a className="mdl-navigation__link mdl-collapse__button expando-header" onClick={this.onClick}>
+        <i className="material-icons mdl-collapse__icon mdl-animation--default">expand_more</i>
+        {props.header}
+      </a>
+        <div className="mdl-collapse__content-wrapper expando-content">
+        <div className="mdl-collapse__content mdl-animation--default" ref="content">
+        {props.children}
+      </div>
+        </div>
+        </div>)
   }
 })
 
@@ -742,7 +770,19 @@ function extractLabel(label) {
 }
 
 function fetchVertex(gid, callback) {
-  fetch("/vertex/find/" + gid).then(function(response) {return response.json()}).then(callback)
+  fetch("/vertex/find/" + gid).then(
+    function(response) {
+      return response.json()
+    }
+  ).then(callback)
+}
+
+function fetchEdge(from, label, to, callback) {
+  fetch("/edge/find/" + from + '/' + label + '/' + to).then(
+    function(response) {
+      return response.json()
+    }
+  ).then(callback)
 }
 
 var VertexViewer = React.createClass({
@@ -752,6 +792,7 @@ var VertexViewer = React.createClass({
       loading: false,
       error: "",
       vertex: {},
+      edge: {}
     }
   },
 
@@ -764,39 +805,55 @@ var VertexViewer = React.createClass({
     var gid = this.props.input
     if (gid) {
       // if (this.state.input) {
-      this.setVertex(gid, true)
-      history.pushState({gid: gid}, "Vertex: " + gid, '?gid=' + gid)
+      this.setGid(gid, true)
+      history.pushState({gid: gid}, "Gid: " + gid, '?gid=' + gid)
     }
   },
 
   onPopState(e) {
     var hash = this.getGIDFromURL()
     if (e.state && e.state.gid) {
-      this.setVertex(e.state.gid, true)
+      this.setGid(e.state.gid, true)
     } else if (hash) {
-      this.setVertex(hash, true)
+      this.setGid(hash, true)
     } else {
-      this.setVertex()
+      this.setGid()
     }
   },
 
-  setVertex(gid, nopushstate) {
+  setGid(gid, nopushstate) {
     if (!gid) {
-      this.setState({vertex: {}, error: "", input: ""})
+      this.setState({vertex: {}, edge: {}, error: "", input: ""})
     } else {
       var we = this
-      this.setState({input: gid, loading: true, error: ""})
-      fetchVertex(gid, function(result) {
-        if (Object.keys(result).length > 0) {
-          // we.setState({input: gid, vertex: result, loading: false, error: ""})
-          we.setState({vertex: result, loading: false, error: ""})
-          if (!nopushstate) {
-            history.pushState({gid: gid}, "Vertex: " + gid, '?gid=' + gid)
+      this.setState({input: gid['label'] ? gid['label'] : gid, loading: true, error: ""})
+
+      if (gid['from']) {
+      // if (edge) {
+        fetchEdge(gid['from'], gid['label'], gid['to'], function(result) {
+          if (Object.keys(result).length > 0) {
+            // we.setState({input: gid, vertex: result, loading: false, error: ""})
+            we.setState({edge: result, vertex: {}, loading: false, error: ""})
+            if (!nopushstate) {
+              history.pushState({gid: gid}, "Gid: " + gid, '?gid=' + gid)
+            }
+          } else {
+            we.setState({vertex: {}, edge: {}, loading: false, error: ""})
           }
-        } else {
-          we.setState({vertex: {}, loading: false, error: ""})
-        }
-      })
+        })
+      } else {
+        fetchVertex(gid, function(result) {
+          if (Object.keys(result).length > 0) {
+            // we.setState({input: gid, vertex: result, loading: false, error: ""})
+            we.setState({vertex: result, edge: {}, loading: false, error: ""})
+            if (!nopushstate) {
+              history.pushState({gid: gid}, "Gid: " + gid, '?gid=' + gid)
+            }
+          } else {
+            we.setState({vertex: {}, edge: {}, loading: false, error: ""})
+          }
+        })
+      }
     }
   },
 
@@ -814,7 +871,7 @@ var VertexViewer = React.createClass({
 
     var emptyMessage = ""
     if (this.state.input) {
-      emptyMessage = "No vertex found"
+      emptyMessage = "Nothing found"
     }
 
     var spacing = <div key="spacing" className="spacing"></div>
@@ -823,25 +880,50 @@ var VertexViewer = React.createClass({
       var visualizations = []
 
     if (this.state.vertex.properties) {
-      properties = (<div><PropertiesView vertex={this.state.vertex} /><EdgesView vertex={this.state.vertex} navigate={this.setVertex} /></div>)
+      properties = (
+          <div>
+          <PropertiesView vertex={this.state.vertex} />
+          <EdgesView vertex={this.state.vertex} navigate={this.setGid} />
+          </div>
+      )
 
-      if (this.props.visualizations) {
-        var label = this.state.vertex.label || this.state.vertex.properties.label || this.state.vertex.properties['#label'] || this.state.vertex.properties.type || extractLabel(this.state.vertex.gid)
-        console.log("label: " + label)
-        if (this.props.visualizations[label]) {
-          console.log("visualizations found: " + this.props.visualizations[label].length)
-          visualizations = visualizations.concat(this.props.visualizations[label].map(function(visualization) {
-            return visualization(we.state.vertex)
-          }))
-        }
-      }
+      // if (this.props.visualizations) {
+      //   var label = this.state.vertex.label || this.state.vertex.properties.label || this.state.vertex.properties['#label'] || this.state.vertex.properties.type || extractLabexl(this.state.vertex.gid)
+      //   console.log("label: " + label)
+      //   if (this.props.visualizations[label]) {
+      //     console.log("visualizations found: " + this.props.visualizations[label].length)
+      //     visualizations = visualizations.concat(this.props.visualizations[label].map(function(visualization) {
+      //       return visualization(we.state.vertex)
+      //     }))
+      //   }
+      // }
+    }
+
+    if (this.state.edge.properties) {
+      properties = (
+          <div>
+          <PropertiesView vertex={this.state.edge} />
+          <VertexesView edge={this.state.edge} navigate={this.setGid} />
+          </div>
+      )
+
+      // if (this.props.visualizations) {
+      //   var label = this.state.edge.label || this.state.edge.properties.label || this.state.edge.properties['#label'] || this.state.edge.properties.type || extractLabel(this.state.edge.gid)
+      //   console.log("label: " + label)
+      //   if (this.props.visualizations[label]) {
+      //     console.log("visualizations found: " + this.props.visualizations[label].length)
+      //     visualizations = visualizations.concat(this.props.visualizations[label].map(function(visualization) {
+      //       return visualization(we.state.edge)
+      //     }))
+      //   }
+      // }
     }
 
     console.log("generated: " + visualizations.length)
 
     return (
         <div>
-        <VertexInput onChange={this.setVertex} value={this.state.input} />
+        <VertexInput onChange={this.setGid} value={this.state.input} />
         {loading}
       {visualizations}
       {error}
@@ -851,23 +933,6 @@ var VertexViewer = React.createClass({
     )
   }
 })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
