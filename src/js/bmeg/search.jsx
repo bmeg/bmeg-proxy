@@ -81,7 +81,7 @@ class OphionSearch extends Component {
     return (
       <div>
       <div>
-      <input className="mdl-textfield__input mdl-color--grey-100" type="text" onChange={this.handleChange.bind(this)} />
+        <input id="search-input" type="text" onChange={this.handleChange.bind(this)} />
       </div>
       <div>
       {columns}
@@ -90,6 +90,7 @@ class OphionSearch extends Component {
     )      
   }
 }
+              // <input id="search-input" className="mdl-textfield__input mdl-color--grey-100" type="text" onChange={this.handleChange.bind(this)} />
 
 // when page loads, render component
 var previousonload = window.onload

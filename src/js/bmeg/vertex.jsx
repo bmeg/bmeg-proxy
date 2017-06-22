@@ -672,6 +672,10 @@ var EdgesView = function(props) {
   )
 }
 
+function labelFor(gid) {
+  return gid.split(':')[0];
+}
+
 var VertexesView = function(props) {
   var from = props.edge['out']
   var to = props.edge['in']
@@ -680,11 +684,11 @@ var VertexesView = function(props) {
       <div>
       <div className="vertex-edges-wrapper">
       <div className="vertex-in-edges vertex-edges">
-      <h4>From Vertex</h4>
+      <h4>from {labelFor(from)}</h4>
       <a onClick={() => props.navigate(from)}>{snipPrefix(from)}</a>
       </div>
       <div className="vertex-out-edges vertex-edges">
-      <h4>To Vertex</h4>
+      <h4>to {labelFor(to)}</h4>
       <a onClick={() => props.navigate(to)}>{snipPrefix(to)}</a>
       </div>
       </div>
@@ -785,6 +789,49 @@ function fetchEdge(from, label, to, callback) {
   ).then(callback)
 }
 
+function flatGid(gid) {
+  if (gid['from']) {
+    return '(' + gid['from'] + ')--' + gid['label'] + '->(' + gid['to'] + ')';
+  } else {
+    return gid;
+  }
+}
+
+function viewGid(gid) {
+  if (gid['from']) {
+    return '(' + snipPrefix(gid['from']) + ')--' + gid['label'] + '->(' + snipPrefix(gid['to']) + ')';
+  } else {
+    return gid;
+  }
+}
+
+function extractEdgeGid(gid) {
+  var match = gid.match('\\\(([^()]+)\\\)--([^-]+)->\\\(([^()]+)\\\)');
+  if (match) {
+    return {
+      from: match[1],
+      label: match[2],
+      to: match[3]
+    }
+  }
+}
+
+function makeTitle(vertex, edge) {
+  if (vertex.label) {
+    console.log(vertex)
+    return <h2>{vertex.label} {snipPrefix(vertex.gid)}</h2>
+  } else if (edge.label) {
+    console.log(edge)
+    return <h2>{snipPrefix(edge['out'])}
+      <span className="edge-arrow">{' --> '}</span>
+      {edge['label']}
+      <span className="edge-arrow">{' --> '}</span>
+      {snipPrefix(edge['in'])}
+    </h2>
+        // return edge.label + " edge from " + snipPrefix(edge['out']) + " to " + snipPrefix(edge['in'])
+  }
+}
+
 var VertexViewer = React.createClass({
   getInitialState() {
     return {
@@ -826,16 +873,25 @@ var VertexViewer = React.createClass({
       this.setState({vertex: {}, edge: {}, error: "", input: ""})
     } else {
       var we = this
-      this.setState({input: gid['label'] ? gid['label'] : gid, loading: true, error: ""})
+      var flat = flatGid(gid)
+      this.setState({input: flat, loading: true, error: ""})
 
-      if (gid['from']) {
-      // if (edge) {
+      if (gid[0] === '(') {
+        gid = extractEdgeGid(gid)
+      }
+
+      if (gid['from']) { // this means it is an edge
         fetchEdge(gid['from'], gid['label'], gid['to'], function(result) {
           if (Object.keys(result).length > 0) {
-            // we.setState({input: gid, vertex: result, loading: false, error: ""})
-            we.setState({edge: result, vertex: {}, loading: false, error: ""})
+            we.setState({
+              input: flat,
+              edge: result,
+              vertex: {},
+              loading: false,
+              error: ""})
+
             if (!nopushstate) {
-              history.pushState({gid: gid}, "Gid: " + gid, '?gid=' + gid)
+              history.pushState({gid: gid}, "Gid: " + flat, '?gid=' + flat)
             }
           } else {
             we.setState({vertex: {}, edge: {}, loading: false, error: ""})
@@ -844,10 +900,15 @@ var VertexViewer = React.createClass({
       } else {
         fetchVertex(gid, function(result) {
           if (Object.keys(result).length > 0) {
-            // we.setState({input: gid, vertex: result, loading: false, error: ""})
-            we.setState({vertex: result, edge: {}, loading: false, error: ""})
+            we.setState({
+              input: flat,
+              vertex: result,
+              edge: {},
+              loading: false,
+              error: ""})
+
             if (!nopushstate) {
-              history.pushState({gid: gid}, "Gid: " + gid, '?gid=' + gid)
+              history.pushState({gid: flat}, "Gid: " + flat, '?gid=' + flat)
             }
           } else {
             we.setState({vertex: {}, edge: {}, loading: false, error: ""})
@@ -868,6 +929,8 @@ var VertexViewer = React.createClass({
     if (this.state.error) {
       error = <div>Request error: {this.state.error}</div>
     }
+
+    var title = <div>{makeTitle(this.state.vertex, this.state.edge)}</div>
 
     var emptyMessage = ""
     if (this.state.input) {
@@ -923,7 +986,7 @@ var VertexViewer = React.createClass({
 
     return (
         <div>
-        <VertexInput onChange={this.setGid} value={this.state.input} />
+        {title}
         {loading}
       {visualizations}
       {error}
@@ -936,6 +999,7 @@ var VertexViewer = React.createClass({
 
 
 
+        // <VertexInput onChange={this.setGid} value={this.state.input} />
 
 
 
