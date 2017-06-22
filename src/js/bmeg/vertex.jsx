@@ -991,7 +991,7 @@ var VertexViewer = React.createClass({
     console.log("generated: " + visualizations.length)
 
     return (
-        <div>
+        <div id="vertex-container">
         {title}
         {loading}
       {visualizations}
@@ -1316,23 +1316,14 @@ class SchemaViewer extends Component {
 }
 
 function viewer(router) {
-  // render(<OphionSearch name="All" filter="" />, document.getElementById('ophion-search'))
   render(<VertexViewer visualizations={generateVisualizations()} />, document.getElementById('vertex-explore'))
-}
-
-function schema(router) {
-  var width = 800
-  var height = 800
-  queries.schema(function(schema) {
-    render(<SchemaGraph schema={schema} width={width} height={height} />, document.getElementById('vertex-explore'))
-  })
 }
 
 function schemaViewer(router) {
   var parent = document.getElementById('vertex-explore');
-  var width = parent.clientWidth;
+  var width = parent.clientWidth - 350;
   var height = window.innerHeight - 100;
-  render(<SchemaViewer width={width} height={height} schema={schema} />, document.getElementById('vertex-explore'))
+  render(<SchemaViewer width={width} height={height} />, document.getElementById('vertex-explore'))
 }
 
 function drugResponse(router) {
