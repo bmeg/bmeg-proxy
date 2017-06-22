@@ -175,10 +175,10 @@ class Cohort extends Component {
       console.log('this.state.selectedProjects',this.state.selectedProjects);
       var ophionQuery = O.query().has("gid",O.within(this.state.selectedProjects)).outgoing("hasMember");
       if (this.state.selectedGenders.length > 0) {
-        ophionQuery = ophionQuery.has("gender", O.within(this.state.selectedGenders));
+        ophionQuery = ophionQuery.has("info:gender", O.within(this.state.selectedGenders));
       }
       if (this.state.selectedTumorStatus.length > 0) {
-        ophionQuery = ophionQuery.has("tumor_status", O.within(this.state.selectedTumorStatus));
+        ophionQuery = ophionQuery.has("info:tumor_status", O.within(this.state.selectedTumorStatus));
       }
     }
     if (ophionQuery) {
