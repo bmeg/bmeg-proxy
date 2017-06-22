@@ -97,23 +97,47 @@ export default class OphionSidebar extends Component {
       </div> ;
   }
 
+  // create elastic query
+  elasticQuery = (q, aggs) => {
+    return {
+      q: q,
+      aggs: aggs,
+      execute: function(cb) {
+        fetch('/search?q='+q+'&aggs='+aggs+'&size=0')
+        .then( (response) => response.json() )
+        .then((responseJson) => {
+          //TODO - this returns only first aggregation
+          //server can return multiple
+          return cb(responseJson.responses[0].aggregations)
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+      },
+      afterExecute: function(elasticAggregations) {
+        console.log(elasticAggregations);
+        var mappedOphionData = [] ;
+        console.log(this.aggs, 'afterExecute', elasticAggregations[this.aggs]);
+        mappedOphionData = _.map(elasticAggregations[this.aggs].buckets, function(agg) { return {name: agg.key, gid: agg.key, count: agg.doc_count}} )
+        console.log('gender mappedOphionData', mappedOphionData);
+        return mappedOphionData;
+      }
+    };
+  }
+
+
   // gender
   renderGenders = () => {
-    var O = Ophion();
-    var ophionQuery = O.query().has("gid","type:Individual").outgoing("hasInstance").groupCount("info:gender");
+    // aggregate gender
+    var genderQuery = this.elasticQuery('label:Individual', 'properties.gender');
     var _self = this ;
     return <div>
       <OphionFacet
-        query={ophionQuery}
+        query={genderQuery}
         caption='Genders'
         leftIcon='invert_colors'
-        afterExecute={ ophionObjects => {
-            console.log(ophionObjects);
-            var mappedOphionData = [] ;
-            console.log('gender afterExecute',ophionObjects)
-            mappedOphionData.push({name:'FEMALE', gid: 'FEMALE', count: ophionObjects[0]['FEMALE'] });
-            mappedOphionData.push({name:'MALE', gid: 'MALE', count: ophionObjects[0]['MALE'] });
-            return mappedOphionData;
+        afterExecute={ elasticAggregations => {
+            return genderQuery.afterExecute(elasticAggregations) ;
           }
         }
         onItemSelect={item => {
@@ -129,20 +153,18 @@ export default class OphionSidebar extends Component {
 
   // tumorStatus
   renderTumorStatus = () => {
-    var O = Ophion();
-    var ophionQuery = O.query().has("gid","type:Individual").outgoing("hasInstance").groupCount("info:tumor_status");
+    // aggregate tumor status
+    var tumorStatusQuery = this.elasticQuery('label:Individual', 'properties.tumor_status');
+
+
     var _self = this ;
     return <div>
       <OphionFacet
-        query={ophionQuery}
+        query={tumorStatusQuery}
         caption='TumorStatus'
         leftIcon='swap_calls'
-        afterExecute={ ophionObjects => {
-            var mappedOphionData = [] ;
-            console.log('tumorStatus afterExecute',ophionObjects)
-            mappedOphionData.push({name:'TUMOR FREE', gid: 'TUMOR FREE', count: ophionObjects[0]['TUMOR FREE'] });
-            mappedOphionData.push({name:'WITH TUMOR', gid: 'WITH TUMOR', count: ophionObjects[0]['WITH TUMOR'] });
-            return mappedOphionData;
+        afterExecute={ elasticAggregations => {
+          return tumorStatusQuery.afterExecute(elasticAggregations) ;    
           }
         }
         onItemSelect={item => {
