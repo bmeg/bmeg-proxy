@@ -7,6 +7,7 @@ import * as ReactFauxDOM from 'react-faux-dom'
 import * as d3 from 'd3'
 import {Ophion} from 'ophion'
 import 'whatwg-fetch'
+import OphionSearch from './search.jsx'
 
 // import {PieChart,VertexViewer,SchemaGraph,foo} from 'ceto'
 // import {PieChart} from 'ceto'
@@ -1305,6 +1306,7 @@ class SchemaViewer extends Component {
 }
 
 function viewer(router) {
+  // render(<OphionSearch name="All" filter="" />, document.getElementById('ophion-search'))
   render(<VertexViewer visualizations={generateVisualizations()} />, document.getElementById('vertex-explore'))
 }
 
@@ -1344,7 +1346,19 @@ function initialize() {
   // drugResponse()
 }
 
-window.onload = function() { initialize() }
+window.onload = function() {
+
+}
+
+
+var previous = window.onload;
+window.onload = function() {
+  if (previous) {
+    previous()
+  }
+
+  initialize()
+}
 
 export {
   queries

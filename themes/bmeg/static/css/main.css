@@ -373,10 +373,14 @@ h1 {
 #search-input {
     font-size: 21px;
     width: 330px;
-    height: 25px;
+    height: 23px;
     font-family: 'Roboto', 'Helvetica', sans-serif;
 }
 
 .edge-arrow {
     color: #bbccdd;
+}
+
+#vertex-explore {
+    padding: 1em 4em 1em 4em;
 }
