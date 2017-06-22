@@ -1,0 +1,45 @@
+################
+version: '2.1'
+
+services:
+  # Elastic Search
+  # note: on docker for mac, you may need to adjust the docker-machines' config
+  # if you get this error ....
+  # elastic    | ERROR: bootstrap checks failed
+  # elastic    | max virtual memory areas vm.max_map_count [65530] likely too low, increase to at least [262144]
+  # ... see this
+  # https://github.com/elastic/elasticsearch-docker/blob/master/README.md#osx-with-docker-toolbox
+
+  # create an elastic instance, mapping ./snapshots & snapshot-setup.sh to the container
+  # on creation, run snapshot-setup.sh
+  elastic:
+    container_name: elastic_bmeg
+    build:
+      context: services/elastic/
+    volumes:
+      - "./snapshots:/snapshots/"
+      - "./services/elastic/snapshot-setup.sh:/usr/local/bin/snapshot-setup.sh"
+    ports:
+      - "${ELASTIC_PORT}:${ELASTIC_PORT}"
+    environment:
+      - http.host=0.0.0.0
+      - transport.host=127.0.0.1
+      - xpack.security.enabled=false
+      - path.repo=/snapshots
+    # command:
+    # - snapshot-setup.sh
+
+  kibana:
+    container_name: kibana_bmeg
+    build:
+      context: services/kibana/
+    ports:
+      - "${KIBANA_PORT}:${KIBANA_PORT}"
+    links:
+      - elastic:elasticsearch
+    environment:
+      - xpack.security.enabled=false
+      - XPACK_MONITORING_REPORT_STATS=false
+      # - SERVER_BASEPATH=/kibana  # for set in proxy
+
+# see docker-compose-nginx.yml for nginx proxy
