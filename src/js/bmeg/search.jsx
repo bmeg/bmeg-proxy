@@ -93,10 +93,11 @@ export default class OphionSearch extends Component {
 
 
 // when page loads, render component
-var previousonload = window.onload
-window.onload = function() {
-  previousonload()
-  render(<OphionSearch name="All" filter="" />, document.getElementById('ophion-search'));
-}
+// var previousonload = window.onload
+// window.onload = function() {
+//   previousonload()
+//   render(<OphionSearch name="All" filter="" />, document.getElementById('ophion-search'));
+// }
+
 // <input id="search-input" className="mdl-textfield__input mdl-color--grey-100" type="text" onChange={this.handleChange.bind(this)} />
 

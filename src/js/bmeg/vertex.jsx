@@ -8,6 +8,11 @@ import * as d3 from 'd3'
 import {Ophion} from 'ophion'
 import 'whatwg-fetch'
 import OphionSearch from './search.jsx'
+import Sidebar from 'react-sidebar';
+
+// import { createStore } from 'redux'
+// import bmeg from './reducers'
+// let store = createStore(bmeg)
 
 // import {PieChart,VertexViewer,SchemaGraph,foo} from 'ceto'
 // import {PieChart} from 'ceto'
@@ -1297,9 +1302,14 @@ class SchemaViewer extends Component {
     } else {
       elements.push(<div key="loading"><img src={loadingSpinner} /></div>)
     }
+
+    var search = <OphionSearch name="All" filter="" />
+
     return (
-        <div>
+      <div>
+        <Sidebar sidebar={search} open={true} docked={true} sidebarClassName='sidebar-container'>
         {elements}
+        </Sidebar>
       </div>
     )
   }
@@ -1331,6 +1341,11 @@ function drugResponse(router) {
 }
 
 function initialize() {
+  console.log(document.getElementById('vertex-explore'))
+  schemaViewer()
+
+
+
   // var router = new Navigo(null, false)
 
   // router
@@ -1341,8 +1356,6 @@ function initialize() {
   //     schemaViewer()
   //   }).resolve()
 
-  console.log(document.getElementById('vertex-explore'))
-  schemaViewer()
   // drugResponse()
 }
 
