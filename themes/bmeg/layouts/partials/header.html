@@ -24,10 +24,12 @@
           <!-- Add spacer, to align navigation to the right -->
           <div class="mdl-layout-spacer"></div>
           {{ if .Params.search }}
+          <script src="/js/search.bundle.js"></script>
           <form action="#">
             <div class="mdl-textfield mdl-js-textfield">
-              <input class="mdl-textfield__input mdl-color--grey-100" type="text" id="sample1">
-              <label class="mdl-textfield__label" for="sample1"></label>
+              <div id="ophion-search"></div>
+              <!-- <input class="mdl-textfield__input mdl-color--grey-100" type="text" id="sample1"> -->
+              <!-- <label class="mdl-textfield__label" for="sample1"></label> -->
             </div>
           </form>
           <div class="mdl-layout-spacer"></div>

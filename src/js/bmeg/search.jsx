@@ -8,7 +8,7 @@ import {Ophion} from 'ophion'
 // use this instead of boilerplate
 import * as _ from 'underscore'
 
-class OphionColumn extends Component {
+export class ResultColumn extends Component {
   constructor(props) {
     super(props);
   }
@@ -28,7 +28,7 @@ class OphionColumn extends Component {
   }
 }
 
-class OphionSearch extends Component {
+export default class OphionSearch extends Component {
   constructor(props) {
     super(props)
     this.state = {
@@ -75,21 +75,29 @@ class OphionSearch extends Component {
     var self = this;
     let columns = Object.keys(this.state.results).map(function(label) {
       var column = self.state.results[label];
-      return <OphionColumn key={label} label={label} items={column} />
+      return <ResultColumn key={label} label={label} items={column} />
     })
 
-    return <div>
+    return (
       <div>
-      <input type="text" onChange={this.handleChange.bind(this)} />
+      <div>
+        <input id="search-input" type="text" onChange={this.handleChange.bind(this)} />
       </div>
       <div>
       {columns}
       </div>
       </div>
+    )
   }
 }
 
+
 // when page loads, render component
-window.onload = function() {
-  render(<OphionSearch name="All" filter="" />, document.getElementById('ophion-search'));
-}
+// var previousonload = window.onload
+// window.onload = function() {
+//   previousonload()
+//   render(<OphionSearch name="All" filter="" />, document.getElementById('ophion-search'));
+// }
+
+// <input id="search-input" className="mdl-textfield__input mdl-color--grey-100" type="text" onChange={this.handleChange.bind(this)} />
+

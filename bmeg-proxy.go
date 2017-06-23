@@ -34,6 +34,7 @@ func main() {
 	mux.Handle("/vertex/", proxy)
 	mux.Handle("/schema/protograph", proxy)
 	mux.Handle("/vertex/find", proxy)
+	mux.Handle("/edge/find/", proxy)
 	mux.Handle("/", fs)
 	http.ListenAndServe(fmt.Sprintf(":%d", *port), mux)
 }
