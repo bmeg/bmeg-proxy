@@ -103,22 +103,22 @@ export default class OphionSidebar extends Component {
       q: q,
       aggs: aggs,
       execute: function(cb) {
-        fetch('/search?q='+q+'&aggs='+aggs+'&size=0')
-        .then( (response) => response.json() )
-        .then((responseJson) => {
-          //TODO - this returns only first aggregation
-          //server can return multiple
-          return cb(responseJson.responses[0].aggregations)
-        })
-        .catch((error) => {
-          console.error(error);
-        });
+        fetch('/search/counts?query='+q+'&terms='+aggs+'&size=10')
+          .then((response) => {
+            return response.json()
+          }).then((json) => {
+            console.log(json)
+            cb(json[0].aggregations)
+          })
+          .catch((error) => {
+            console.error(error);
+          });
       },
-      afterExecute: function(elasticAggregations) {
-        console.log(elasticAggregations);
+      afterExecute: function(counts) {
+        console.log(counts);
         var mappedOphionData = [] ;
-        console.log(this.aggs, 'afterExecute', elasticAggregations[this.aggs]);
-        mappedOphionData = _.map(elasticAggregations[this.aggs].buckets, function(agg) { return {name: agg.key, gid: agg.key, count: agg.doc_count}} )
+        console.log(this.aggs, 'afterExecute', counts[this.aggs]);
+        mappedOphionData = _.map(counts[this.aggs].buckets, function(agg) { return {name: agg.key, gid: agg.key, count: agg.doc_count}} )
         console.log('gender mappedOphionData', mappedOphionData);
         return mappedOphionData;
       }
@@ -136,8 +136,8 @@ export default class OphionSidebar extends Component {
         query={genderQuery}
         caption='Genders'
         leftIcon='invert_colors'
-        afterExecute={ elasticAggregations => {
-            return genderQuery.afterExecute(elasticAggregations) ;
+        afterExecute={ counts => {
+            return genderQuery.afterExecute(counts) ;
           }
         }
         onItemSelect={item => {
@@ -163,8 +163,8 @@ export default class OphionSidebar extends Component {
         query={tumorStatusQuery}
         caption='TumorStatus'
         leftIcon='swap_calls'
-        afterExecute={ elasticAggregations => {
-          return tumorStatusQuery.afterExecute(elasticAggregations) ;    
+        afterExecute={ counts => {
+          return tumorStatusQuery.afterExecute(counts);
           }
         }
         onItemSelect={item => {
