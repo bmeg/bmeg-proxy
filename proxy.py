@@ -160,6 +160,8 @@ if __name__ == "__main__":
             dict(url="%s/schema/protograph" % args.main)),
         (r"^/vertex/find/(.*)", ProxyHandler,
             dict(url="%s/vertex/find/" % args.main)),
+        (r"^/edge/find/(.*)", ProxyHandler,
+            dict(url="%s/edge/find/" % args.main)),
         (r"^/gaia/gene/(.*)/find/(.*)",
             ProxyHandler, dict(url="%s/gaia/vertex/find/" % args.main)),
         (r"^/search[/]?(.*)",

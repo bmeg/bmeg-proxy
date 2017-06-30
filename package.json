@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "babel-plugin-transform-node-env-inline": "0.0.2",
+    "chart.js": "^2.6.0",
     "classnames": "2.2.5",
     "css-loader": "^0.28.1",
     "cytoscape": "2.7.15",
@@ -24,6 +25,7 @@
     "postcss-loader": "^2.0.5",
     "postcss-mixins": "^6.0.0",
     "react": "^15.5.0",
+    "react-chartjs": "^0.8.0",
     "react-dom": "^15.5.0",
     "react-faux-dom": "3.0.0",
     "react-redux": "^5.0.5",
