@@ -8,6 +8,13 @@ import {Ophion} from 'ophion'
 import 'whatwg-fetch'
 import {Chart} from 'chart.js'
 import {Line} from 'react-chartjs'
+import ttest from 'ttest'
+
+// add box plots
+// report original number along x-axis
+// search-ahead drug name completion
+//   sort alphabetically case insensitive
+// hover over line reveals name of sample
 
 function addLists(a, b) {
   var longest = a.length > b.length ? a : b
@@ -314,7 +321,6 @@ class DrugResponse extends Component {
     var rawValues = responses.filter(function(x, i) {return (i % 2) === 1})
 
     var summary = rawSummary.map(function(mutant) {
-      console.log(mutant)
       var response = JSON.parse(mutant)
       var amax = response.filter(function(r) {return r['type'] === 'AUC'}) // 'EC50'}) // 'AMAX'})
       if (!_.isEmpty(amax)) {
@@ -322,13 +328,16 @@ class DrugResponse extends Component {
       }
     })
 
-    console.log('values')
-    console.log(rawValues[0])
-
     var values = rawValues.map(function(mutant) {
       var response = JSON.parse(mutant)
       return response.map(function(data) {
-        return {x: Math.log(data.dose), y: data.response}
+        if (data.dose) {
+          return {x: Math.log(data.dose), y: data.response}
+        } else {
+          console.log('bad data')
+          console.log(data)
+          return {}
+        }
         // dimensions.x.push(Math.log(point.dose))
         // dimensions.y.push(point.response)
         // return dimensions
@@ -356,22 +365,27 @@ class DrugResponse extends Component {
 
       if (!_.isEmpty(mutants)) {
         fetchMutantResponses(function(mresponses) {
-          console.log(mresponses)
           fetchNormalResponses(function(nresponses) {
-            console.log(nresponses)
-
             var mutantResponses = self.extractResponses(mresponses)
             var normalResponses = self.extractResponses(nresponses)
-
-            console.log(mutantResponses)
-            console.log(normalResponses)
 
             var mutantDataset = mutantResponses.values.map(function(data) {
               return {data: data, borderColor: 'rgba(255, 99, 132, 0.5)', borderWidth: 2}})
             var normalDataset = normalResponses.values.map(function(data) {
               return {data: data, borderColor: 'rgba(132, 99, 255, 0.5)', borderWidth: 2}})
+            var test = []
+            var len = Math.min(mutantResponses.values.length, normalResponses.values.length)
+            console.log(ttest)
 
-            console.log(mutantDataset)
+            for (var x = 0; x < len; x++) {
+              var m = mutantResponses.values.filter(function(data) {return !_.isEmpty(data[x])}).map(function(data) {return data[x]['y']})
+              var n = normalResponses.values.filter(function(data) {return !_.isEmpty(data[x])}).map(function(data) {return data[x]['y']})
+              test[x] = ttest(m, n, {mu: 1}).testValue()
+            }
+
+            console.log("TTEST")
+            console.log(test)
+
             self.setState({mutantResponses: mutantResponses, normalResponses: normalResponses})
 
             var context = document.getElementById('curves-plot').getContext('2d')
@@ -513,6 +527,7 @@ class DrugResponse extends Component {
         <button onClick={this.doCompare.bind(this)} type="button">Compare cohorts</button>
         <DrugSelect ref="drugselect" cohort={this.props.cohort} selectDrug={this.selectDrug.bind(this)} />
         <canvas id="curves-plot" width="1200" height="400"></canvas>
+        <canvas id="t-test-plot" width="1200" height="400"></canvas>
         </div>
     )
   }
