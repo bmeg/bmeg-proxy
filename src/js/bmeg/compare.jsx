@@ -319,7 +319,7 @@ class DrugResponse extends Component {
   selectDrug(drug) {
     console.log('set drug to ' + drug)
     this.setState({drug: drug})
-    this.doCompare()
+    // this.doCompare()
     // this.setGene(this.state.input)
   }
 
@@ -403,7 +403,7 @@ class DrugResponse extends Component {
             Plotly.newPlot(
               'response-plot',
               [{name: 'blue samples', y: normalResponses.summary, type: 'box'},
-               {name: 'red samples', y: mutantResponses.summary, type: 'box'}]
+               {name: 'red samples', y: mutantResponses.summary, type: 'box', fillcolor: '#ff6699', line: {color: '#aa3355'}}]
             )
 
             var datasets = mutantDataset.concat(normalDataset)
