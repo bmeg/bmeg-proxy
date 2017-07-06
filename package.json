@@ -33,6 +33,7 @@
     "react-table": "^6.0.5",
     "react-toolbox": "^2.0.0-beta.12",
     "react-transition-group": "^1.1.3",
+    "react-typeahead": "^2.0.0-alpha.5",
     "redux": "^3.7.0",
     "style-loader": "^0.17.0",
     "ttest": "^1.1.0",

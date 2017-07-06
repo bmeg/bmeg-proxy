@@ -9,12 +9,8 @@ import 'whatwg-fetch'
 import {Chart} from 'chart.js'
 import {Line} from 'react-chartjs'
 import ttest from 'ttest'
+import {Typeahead} from 'react-typeahead'
 
-// add box plots
-// report original number along x-axis
-// search-ahead drug name completion
-//   sort alphabetically case insensitive
-// hover over line reveals name of sample
 
 function addLists(a, b) {
   var longest = a.length > b.length ? a : b
@@ -193,6 +189,10 @@ class GeneInput extends Component {
   }
 }
 
+function caseInsensitiveCompare(a, b) {
+    return a.toLowerCase().localeCompare(b.toLowerCase());
+}
+
 class DrugSelect extends Component {
   constructor(props) {
     super(props)
@@ -208,37 +208,44 @@ class DrugSelect extends Component {
     console.log(this.props)
     var self = this
     this.fetchCompounds(function(drugs) {
-      var plain = drugs.map(function(drug) {return drug.slice(9)}).sort()
+      var plain = drugs.map(function(drug) {return drug.slice(9)}).sort(caseInsensitiveCompare)
       self.setState({drugs: plain, loaded: true, selected: plain[0]})
       self.props.selectDrug(plain[0])
     })
   }
 
-  selectDrug(event) {
-    var drug = event.target.value
+  selectDrug(drug) {
+    console.log(drug)
+    // var drug = event.target.value
     this.setState({selected: drug})
     this.props.selectDrug(drug)
   }
 
   render() {
     if (this.state.loaded) {
-      var drugOptions = this.state.drugs.map(function(drug) {
-        return <option value={drug} key={drug}>{drug}</option>
-      })
+      // var drugOptions = this.state.drugs.map(function(drug) {
+      //   return <option value={drug} key={drug}>{drug}</option>
+      // })
 
       return (
-          <div>
-          <label className="label-block">Then choose a drug</label>
-          <select value={this.state.selected} onChange={this.selectDrug.bind(this)}>
-          {drugOptions}
-        </select>
-          </div>
+        <div>
+          <label className="label-block">Choose a drug</label>
+          <Typeahead options={this.state.drugs} defaultValue={this.state.selected} onOptionSelected={this.selectDrug.bind(this)} />
+        </div>
       )
     } else {
       return <div>loading compounds....</div>
     }
   }
 }
+
+          // <div>
+          //   <label className="label-block">Then choose a drug</label>
+          //   <select value={this.state.selected} onChange={this.selectDrug.bind(this)}>
+          //     {drugOptions}
+          //   </select>
+          // </div>
+
 
 class DrugResponse extends Component {
   constructor(props) {
@@ -373,18 +380,18 @@ class DrugResponse extends Component {
               return {data: data, borderColor: 'rgba(255, 99, 132, 0.5)', borderWidth: 2}})
             var normalDataset = normalResponses.values.map(function(data) {
               return {data: data, borderColor: 'rgba(132, 99, 255, 0.5)', borderWidth: 2}})
-            var test = []
-            var len = Math.min(mutantResponses.values.length, normalResponses.values.length)
-            console.log(ttest)
+            // var test = []
+            // var len = Math.min(mutantResponses.values.length, normalResponses.values.length)
+            // console.log(ttest)
 
-            for (var x = 0; x < len; x++) {
-              var m = mutantResponses.values.filter(function(data) {return !_.isEmpty(data[x])}).map(function(data) {return data[x]['y']})
-              var n = normalResponses.values.filter(function(data) {return !_.isEmpty(data[x])}).map(function(data) {return data[x]['y']})
-              test[x] = ttest(m, n, {mu: 1}).testValue()
-            }
+            // for (var x = 0; x < len; x++) {
+            //   var m = mutantResponses.values.filter(function(data) {return !_.isEmpty(data[x])}).map(function(data) {return data[x]['y']})
+            //   var n = normalResponses.values.filter(function(data) {return !_.isEmpty(data[x])}).map(function(data) {return data[x]['y']})
+            //   test[x] = ttest(m, n, {mu: 1}).testValue()
+            // }
 
-            console.log("TTEST")
-            console.log(test)
+            // console.log("TTEST")
+            // console.log(test)
 
             self.setState({mutantResponses: mutantResponses, normalResponses: normalResponses})
 
@@ -393,17 +400,18 @@ class DrugResponse extends Component {
               self.state.chart.destroy()
             }
 
+            Plotly.newPlot(
+              'response-plot',
+              [{name: 'blue samples', y: normalResponses.summary, type: 'box'},
+               {name: 'red samples', y: mutantResponses.summary, type: 'box'}]
+            )
+
+            var datasets = mutantDataset.concat(normalDataset)
+            var gids = mutants.concat(normals)
             var chart = new Chart(context, {
               type: 'scatter',
               data: {
                 datasets: mutantDataset.concat(normalDataset)
-                // datasets: [{
-                //   label: 'mutants',
-                //   data: mutantDataset,
-                //   backgroundColor: 'rgb(255, 99, 132)',
-                //   borderColor: 'rgb(255, 99, 132)',
-                //   borderWidth: 20
-                // }]
               },
               options: {
                 legend: {
@@ -417,12 +425,24 @@ class DrugResponse extends Component {
                     tension: 0
                   }
                 },
+                tooltips: {
+                  callbacks: {
+                    label: function(item, data) {
+                      return gids[item.datasetIndex].split(/:/).slice(1).join(':')
+                    }
+                  }
+                },
                 scales: {
                   xAxes: [{
                     display: true,
                     scaleLabel: {
                       display: true,
                       labelString: 'Dose'
+                    },
+                    ticks: {
+                      callback: function(value, index, values) {
+                        return Math.exp(value).toString().slice(0, 6)
+                      }
                     }
                   }],
                   yAxes: [{
@@ -443,98 +463,29 @@ class DrugResponse extends Component {
     }
   }
 
-  // setGene(gene) {
-  //   console.log(gene)
-  //   var self = this
-  //   self.setState({input: gene})
-  //   queries.geneExists(gene, function(exists) {
-  //     if (exists) {
-  //       var fetchMutants = queries.samplesWithMutations(self.props.cohort, gene)
-  //       fetchMutants(function(mutants) {
-  //         var normals = _.difference(self.state.samples, mutants)
-  //         self.setState({mutants: mutants, normals: normals})
-  //         console.log("mutants: " + mutants.length)
-  //         console.log("normals: " + normals.length)
-
-  //         var drug = self.state.drug // self.refs.drugselect.state.selected
-  //         var fetchMutantResponses = queries.sampleResponses(mutants, drug)
-  //         var fetchNormalResponses = queries.sampleResponses(normals, drug)
-
-  //         if (!_.isEmpty(mutants)) {
-  //           fetchMutantResponses(function(mresponses) {
-  //             console.log(mresponses)
-  //             fetchNormalResponses(function(nresponses) {
-  //               console.log(nresponses)
-  //               var mutantResponses = self.extractResponses(mresponses)
-  //               var normalResponses = self.extractResponses(nresponses)
-  //               console.log(mutantResponses)
-  //               console.log(normalResponses)
-  //               self.setState({mutantResponses: mutantResponses, normalResponses: normalResponses})
-
-  //               Plotly.newPlot(
-  //                 'response-plot',
-  //                 [{name: 'normal samples', y: normalResponses.summary, type: 'box'},
-  //                  {name: 'mutation samples', y: mutantResponses.summary, type: 'box'}]
-  //               )
-
-  //               var normalAverage = sampleAverage(normalResponses.values)
-  //               normalAverage.mode = 'line'
-  //               normalAverage.name = 'Normals'
-  //               var mutantAverage = sampleAverage(mutantResponses.values)
-  //               mutantAverage.mode = 'line'
-  //               mutantAverage.name = 'Mutations'
-
-                
-
-  //               // var normalCurves = normalResponses.values.map(function(curve) {
-  //               //   curve.name = "Normal"
-  //               //   curve.mode = "lines"
-  //               //   return curve
-  //               // })
-
-  //               // var mutantCurves = mutantResponses.values.map(function(curve) {
-  //               //   curve.name = "Mutation"
-  //               //   curve.mode = "lines"
-  //               //   return curve
-  //               // })
-
-  //               Plotly.newPlot(
-  //                 'curves-plot',
-  //                 [normalAverage, mutantAverage]
-  //                 // mutantCurves.concat(normalCurves)
-  //               )
-  //             })
-  //           })
-  //         }
-  //       })
-  //     } else {
-  //       self.setState({mutants: [], normals: []})
-  //     }
-  //   })
-  // }
-
   render() {
     return (
       <div>
         <div>
-        <label>gids for red</label>
-        <textarea id="mutant-gids" rows="4" cols="50"></textarea>
-        </div>
-        <div>
         <label>gids for blue</label>
         <textarea id="normal-gids" rows="4" cols="50"></textarea>
         </div>
-        <button onClick={this.doCompare.bind(this)} type="button">Compare cohorts</button>
+        <div>
+        <label>gids for red</label>
+        <textarea id="mutant-gids" rows="4" cols="50"></textarea>
+        </div>
         <DrugSelect ref="drugselect" cohort={this.props.cohort} selectDrug={this.selectDrug.bind(this)} />
+        <button onClick={this.doCompare.bind(this)} type="button">Compare cohorts</button>
+        <div id="response-plot"></div>
         <canvas id="curves-plot" width="1200" height="400"></canvas>
-        <canvas id="t-test-plot" width="1200" height="400"></canvas>
         </div>
     )
   }
 }
 
-        // <div id="response-plot"></div>
-        // <div id="curves-plot"></div>
+        // <canvas id="t-test-plot" width="1200" height="400"></canvas>
+
+
 window.onload = function() {
   render(<DrugResponse cohort={"CCLE"} />, document.getElementById('drug-response'))
 }
